@@ -8,8 +8,8 @@ CREATE TABLE Customers (
 	Gender CHAR(1) NOT NULL,
 	Phone CHAR(10) UNIQUE,
 	Email VARCHAR(255) UNIQUE,
-	City VARCHAR(50),
-	[Address] VARCHAR(50),
+	City NVARCHAR(50),
+	[Address] NVARCHAR(50),
 	MembershipType VARCHAR(50) --Regular/CFRIEND/CVIP
 );
 
@@ -17,16 +17,16 @@ CREATE TABLE Customers (
 -- Create table Movies
 CREATE TABLE Movies (
 	MovieID INT PRIMARY KEY,
-	Title VARCHAR(255),
+	Title NVARCHAR(255),
 	Duration INT,
 	Subtitle BIT,
 	Director VARCHAR(50),
-	[Description] VARCHAR(500),
-	[Language] VARCHAR(50),
+	[Description] NVARCHAR(500),
+	[Language] NVARCHAR(50),
 	ReleaseDate DATETIME,
 	TrailerURL VARCHAR(255),
 	AgeRestriction VARCHAR(3),
-	Genre VARCHAR(50),
+	Genre NVARCHAR(50),
 );
 
 
@@ -34,15 +34,15 @@ CREATE TABLE Movies (
 -- Create table Cinemas
 CREATE TABLE Cinemas (
 	CinemaID INT PRIMARY KEY,
-	[Name] VARCHAR(255) NOT NULL,
-	[Location] VARCHAR(255) NOT NULL,
+	[Name] NVARCHAR(255) NOT NULL,
+	[Location] NVARCHAR(255) NOT NULL,
 	TotalScreens INT NOT NULL,
 );
 
 -- Create table Discounts
 CREATE TABLE Discounts (
 	DiscountID VARCHAR(10) PRIMARY KEY,
-	[Description] VARCHAR(255),
+	[Description] NVARCHAR(255),
 	DiscountValue DECIMAL(10, 2),
 );
 
@@ -50,7 +50,7 @@ CREATE TABLE Discounts (
 CREATE TABLE PaymentMethods (
 	PaymentMethodID INT PRIMARY KEY,
 	MethodName VARCHAR(50),
-	[Description] VARCHAR(255)
+	[Description] NVARCHAR(255)
 );
 
 -- Create table Booking
@@ -177,7 +177,7 @@ CREATE TABLE Ticket (
 CREATE TABLE FoodAndBeverages (
 	FoodID VARCHAR(30) PRIMARY KEY,
 	CinemaID INT NOT NULL,
-	ProductName VARCHAR(255),
+	ProductName NVARCHAR(255),
 	Category VARCHAR(255),
 	Price DECIMAL(10, 2),
 
@@ -1078,8 +1078,8 @@ select * from Customers
 select * from Discounts
 select * from PaymentMethods
 select * from DetailBooking
-select * from Transactions
-select * from Customers
+
+
 
 
 
