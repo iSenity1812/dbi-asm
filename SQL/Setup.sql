@@ -124,6 +124,33 @@ CREATE TABLE ShowTimes (
 	FOREIGN KEY (MovieID) REFERENCES Movies(MovieID)
 );
 
+-- Create table Ticket
+CREATE TABLE Ticket (
+	TicketID VARCHAR(30) PRIMARY KEY,
+	PriceID INT NOT NULL,
+	SeatID VARCHAR(20) NOT NULL,
+	MovieID INT NOT NULL,
+	ShowTimeID INT NOT NULL,
+
+
+	FOREIGN KEY (PriceID) REFERENCES TicketPrice(PriceID),
+	FOREIGN KEY (SeatID) REFERENCES Seats(SeatID),
+	FOREIGN KEY (MovieID) REFERENCES Movies(MovieID),
+	FOREIGN KEY (ShowTimeID) REFERENCES ShowTimes(ShowTimeID)
+);
+
+
+-- Create table FoodAndBeverages
+CREATE TABLE FoodAndBeverages (
+	FoodID VARCHAR(30) PRIMARY KEY,
+	CinemaID INT NOT NULL,
+	ProductName NVARCHAR(255),
+	Category VARCHAR(255),
+	Price DECIMAL(10, 2),
+
+	FOREIGN KEY (CinemaID) REFERENCES Cinemas(CinemaID)
+);
+
 -- Create table DetailBooking
 CREATE TABLE DetailBooking (
 	DetailBookingID INT PRIMARY KEY,
@@ -157,32 +184,6 @@ CREATE TABLE DetailBooking (
 );
 
 
--- Create table Ticket
-CREATE TABLE Ticket (
-	TicketID VARCHAR(30) PRIMARY KEY,
-	PriceID INT NOT NULL,
-	SeatID VARCHAR(20) NOT NULL,
-	MovieID INT NOT NULL,
-	ShowTimeID INT NOT NULL,
-
-
-	FOREIGN KEY (PriceID) REFERENCES TicketPrice(PriceID),
-	FOREIGN KEY (SeatID) REFERENCES Seats(SeatID),
-	FOREIGN KEY (MovieID) REFERENCES Movies(MovieID),
-	FOREIGN KEY (ShowTimeID) REFERENCES ShowTimes(ShowTimeID)
-);
-
-
--- Create table FoodAndBeverages
-CREATE TABLE FoodAndBeverages (
-	FoodID VARCHAR(30) PRIMARY KEY,
-	CinemaID INT NOT NULL,
-	ProductName NVARCHAR(255),
-	Category VARCHAR(255),
-	Price DECIMAL(10, 2),
-
-	FOREIGN KEY (CinemaID) REFERENCES Cinemas(CinemaID)
-);
 
 
 --================ TRIGGERS AND PROCEDURES ================--
@@ -211,9 +212,15 @@ BEGIN
 		ROLLBACK TRANSACTION;
 	END
 END;
+GO
 
 
 -- Tu dong  tao ticketID
+/*
+	TicketID: TC{CinemaID}M{MovieID}S{ShowTimeID}-{SeatID}
+	Lay cac thong tin can thiet, Check xem seat co dc dat hay ko thi moi tao TicketID
+*/
+
 CREATE TRIGGER GenerateTicketID
 ON Ticket
 INSTEAD OF INSERT
@@ -226,9 +233,10 @@ BEGIN
 			@PriceID INT,
 			@ShowTimeID INT,
 			@Sequence INT,
-			@GUID VARCHAR(8);
+			--@GUID VARCHAR(8),
+			@SeatStatus BIT;
 
-	-- Khai bao con tro de duyet qua tung bang ghi
+	-- Khai bao con tro de duyet qua tung bang ghi trong inserted
 	DECLARE cur CURSOR FOR
 	SELECT PriceID, SeatID, MovieID, ShowTimeID
 	FROM inserted;
@@ -238,19 +246,35 @@ BEGIN
 
 	WHILE @@FETCH_STATUS = 0
 	BEGIN
-		-- Lay CinemaID tu Seats thong qua Rooms
-		SELECT @CinemaID = CinemaID --FROM TicketPrice WHERE PriceID = @PriceID;
-		FROM Seats
-		INNER JOIN Rooms ON Rooms.RoomID = Seats.RoomID 
-		WHERE @SeatID = SeatID
-		-- Tao ID
-		SET @GUID = SUBSTRING(CONVERT(VARCHAR(36), NEWID()), 1, 8);
-		SET @TicketID = CONCAT('TC', @CinemaID, 'M' , @MovieID, 'S', @ShowTimeID, '-', @GUID);
+		-- Lay CinemaID tu Seats thong qua Rooms, va lay seat status
+		SELECT @SeatStatus = [Status], @CinemaID = r.CinemaID
+		FROM Seats s
+		INNER JOIN Rooms r ON r.RoomID = s.RoomID 
+		WHERE s.SeatID = @SeatID;
+
+		-- Kiem tra status cua seat
+		IF @SeatStatus = 1
+		BEGIN
+			-- Neu ghe da dc dat (1)
+			RAISERROR('Ghế đã được đặt, không thể tạo vé mới.', 16, 1);
+			ROLLBACK TRANSACTION;
+			RETURN;
+		END
+
+		-- Neu ghe trong thi tao ticket
+		--SET @GUID = SUBSTRING(CONVERT(VARCHAR(36), NEWID()), 1, 8);
+		SET @TicketID = CONCAT('TC', @CinemaID, 'M' , @MovieID, 'S', @ShowTimeID, '-', @SeatID);
 
 		-- Insert
 		INSERT INTO Ticket(TicketID, PriceID, SeatID, MovieID, ShowTimeID)
 		VALUES (@TicketID, @PriceID, @SeatID, @MovieID, @ShowTimeID);
 
+		-- Cap nhat status -> (1)
+		UPDATE Seats
+		SET [Status] = 1
+		WHERE SeatID = @SeatID;
+
+		-- Lay bang ghi tiep theo
 		FETCH NEXT FROM cur INTO @PriceID, @SeatID, @MovieID, @ShowTimeID;
 
 	END
@@ -258,6 +282,8 @@ BEGIN
 	CLOSE cur;
 	DEALLOCATE cur;
 END;
+GO
+
 
 
 
@@ -296,6 +322,7 @@ BEGIN
 	CLOSE cur;
 	DEALLOCATE cur;
 END;
+GO
 
 -- Tao RoomID
 CREATE TRIGGER GenerateRoomID
@@ -342,7 +369,7 @@ BEGIN
 	CLOSE cur;
 	DEALLOCATE cur;
 END;
-
+GO
 
 
 -- Tao SeatID
@@ -384,6 +411,26 @@ BEGIN
 	CLOSE cur;
 	DEALLOCATE cur;
 END;
+GO
+
+-- Ktra sea, cap nhat khi ve dc dat
+CREATE TRIGGER UpdateSeatStatus
+ON Ticket
+AFTER INSERT
+AS
+BEGIN
+	DECLARE @SeatID VARCHAR(20);
+
+	-- Lay seatID vua dc dat
+	SELECT @SeatID = i.SeatID FROM inserted i
+
+	-- Cap nhat status 
+	UPDATE Seats
+	SET [Status] = 1
+	WHERE @SeatID = SeatID;
+
+END;
+GO
 
 
 
@@ -424,6 +471,7 @@ BEGIN
 	WHERE i.ProductType = 'Ticket';
 
 END;
+GO
 
 -- Trigger tu  dong ktra va set DiscountID
 
@@ -464,6 +512,37 @@ GO
 
 
 -- Calculate FinalAmount
+-- Lay ti le giam gia
+CREATE FUNCTION GetDiscountValue(@CustomerID VARCHAR(10))
+RETURNS DECIMAL(10, 2)
+AS
+BEGIN
+	DECLARE @DiscountID VARCHAR(10),
+			@DiscountValue DECIMAL(10, 2) = 0;
+
+	-- Lay DiscountValue tu Discount dua tren MembershipType
+	SELECT @DiscountID = 
+		CASE
+			WHEN MembershipType = 'CVIP' THEN 'DISC00001'
+			WHEN MembershipType = 'CFRIEND' THEN 'DISC00002'
+			ELSE NULL
+		END
+	FROM Customers
+	WHERE CustomerID = @CustomerID;
+
+	-- Neu co DiscountID thi lay value cua no
+	IF @DiscountID IS NOT NULL
+	BEGIN
+		SELECT @DiscountValue = DiscountValue
+		FROM Discounts
+		WHERE DiscountID = @DiscountID
+	END
+
+	RETURN @DiscountValue;
+END;
+GO
+
+
 ALTER PROCEDURE CalculateFinalAmount(@BookingID VARCHAR(30))
 AS
 BEGIN
@@ -550,42 +629,29 @@ BEGIN
 	SET TransactionDate = GETDATE()
 	WHERE BookingID = @BookingID
 
+
+	-- De test co j bo sau
+    SELECT  
+        @BookingID AS BookingID,
+        @CustomerID AS CustomerID,
+        @MembershipType AS MembershipType,
+        @DiscountValue AS DiscountValue,
+        @TicketPrice AS TicketPrice,
+        @TotalFoodPrice AS TotalFoodPrice,
+        @Date AS BookingDate,
+        @CurHour AS CurrentHour,
+        @FinalAmount AS FinalAmount,
+        @DiscountID AS DiscountID,
+        N'Thanh toán đã hoàn tất!' AS Message;  -- Thông báo
+
 END;
+GO
 
-
--- Lay ti le giam gia
-CREATE FUNCTION GetDiscountValue(@CustomerID VARCHAR(10))
-RETURNS DECIMAL(10, 2)
-AS
-BEGIN
-	DECLARE @DiscountID VARCHAR(10),
-			@DiscountValue DECIMAL(10, 2) = 0;
-
-	-- Lay DiscountValue tu Discount dua tren MembershipType
-	SELECT @DiscountID = 
-		CASE
-			WHEN MembershipType = 'CVIP' THEN 'DISC00001'
-			WHEN MembershipType = 'CFRIEND' THEN 'DISC00002'
-			ELSE NULL
-		END
-	FROM Customers
-	WHERE CustomerID = @CustomerID;
-
-	-- Neu co DiscountID thi lay value cua no
-	IF @DiscountID IS NOT NULL
-	BEGIN
-		SELECT @DiscountValue = DiscountValue
-		FROM Discounts
-		WHERE DiscountID = @DiscountID
-	END
-
-	RETURN @DiscountValue;
-END;
 
 
 -- Trigger for insertion on Customers table
 -- Phone format: 10 digits
--- CustomerID format: CUSTXXXXX
+-- CustomerID format: CXXXXX
 -- MembershipType: Regular/CFRIEND/CVIP
 CREATE TRIGGER CheckCustomerInsertion ON Customers
 AFTER INSERT, UPDATE
@@ -636,7 +702,7 @@ CREATE TRIGGER CheckSeatInsertion ON Seats
 AFTER INSERT, UPDATE
 AS BEGIN
     IF EXISTS (SELECT 1 FROM inserted
-    WHERE Type NOT IN ('0', '1'))
+    WHERE Type NOT IN ('D', 'S'))
     BEGIN
         PRINT('Error! Insertion canceled!');
         ROLLBACK TRANSACTION;
@@ -693,12 +759,12 @@ END;
 GO
 
 -- Trigger for insertion on Booking table
--- BookingID format: BOOKXXXXX
+-- BookingID format: BXXXXX
 CREATE TRIGGER CheckBookingInsertion ON Booking
 AFTER INSERT
 AS BEGIN
     IF EXISTS (SELECT 1 FROM inserted
-    WHERE BookingID NOT LIKE 'BOOK[0-9][0-9][0-9][0-9][0-9]')
+    WHERE BookingID NOT LIKE 'B[0-9][0-9][0-9][0-9][0-9]')
     BEGIN
         PRINT('Error! Insertion canceled!');
         ROLLBACK TRANSACTION;
@@ -756,16 +822,32 @@ GO
 -- ============ INSERT DATA ============ --
 -- Food
 INSERT INTO FoodAndBeverages (ProductName, Category, Price, CinemaID) VALUES
-('Popcorn', 'Snack', 5.00, 1), -- CinemaID 1
-('Soda', 'Drink', 3.00, 1),
-('Candy', 'Snack', 2.50, 1),
-('Nachos', 'Snack', 4.50, 2), -- CinemaID 2
-('Water', 'Drink', 1.00, 2);
+(N'Combo Party', 'Combo', 210000, 1), -- CinemaID 1
+(N'Combo Solo', 'Combo', 94000, 1),
+(N'Combo Couple', 'Combo', 115000, 1),
+(N'Combo Nha Gau', 'Combo2', 259000, 1),  
+(N'Combo Gau', 'Combo2', 119000, 1),      
+(N'Combo Co Gau', 'Combo2', 129000, 1),   
+(N'Nuoc cam Teppy 327ml', 'Drink', 28000, 1),  
+(N'Nuoc suoi Dasani', 'Drink', 20000, 1),      
+(N'Nuoc trai cay Nutriboost 297ml', 'Drink', 28000, 1),  
+(N'Fanta 32oz', 'Drink', 37000, 1),
+(N'Coke Zero 32oz', 'Drink', 37000, 1),
+(N'Coke 32oz', 'Drink', 37000, 1),
+(N'Sprite 32oz', 'Drink', 37000, 1),
+
+(N'Snack Thai', 'Snack', 25000, 1),           
+(N'Khoai Tay Lay''s Stax 100g', 'Poca', 59000, 1),  
+(N'Poca Khoai Tay 54gr', 'Poca', 28000, 1),  
+(N'Poca Wavy 54gr', 'Poca', 28000, 1);
+GO
+
 
 -- Cinema
 INSERT INTO Cinemas (CinemaID, Name, Location, TotalScreens) VALUES
-(1, 'Cinema One', 'Location A', 5),
-(2, 'Cinema Two', 'Location B', 6);
+(1, 'Cinestar DL', N'Đà Lạt', 5),
+(2, 'Cinestar BD', N'Bình Dương', 4);
+GO
 
 -- Thêm phòng cho Cinema 
 -- Rooms
@@ -773,10 +855,12 @@ INSERT INTO Rooms (CinemaID, Capacity)
 VALUES 
 (1, 100),  -- Room 1
 (2, 100);
+GO
 
 -- Seats (S)
 INSERT INTO Seats(RoomID, SeatNumber, [Row])
 VALUES
+-- CinemaID: 1 Room: 1
 ('C1R1', 1, 'A'),
 ('C1R1', 2, 'A'),
 ('C1R1', 3, 'A'),
@@ -796,6 +880,7 @@ VALUES
 ('C1R2', 2, 'B'),
 ('C1R2', 3, 'B'),
 ('C1R2', 4, 'B');
+GO
 
 -- Seats (D)
 INSERT INTO Seats(RoomID, SeatNumber, [Row], [Type])
@@ -803,39 +888,8 @@ VALUES
 ('C1R2', 5, 'B', 'D'),
 ('C1R2', 6, 'B', 'D'),
 ('C1R2', 7, 'B', 'D'),
-('C1R2', 8, 'B', 'D');	
-
-
-
-INSERT INTO Seats(RoomID, SeatNumber, [Row])
-VALUES
-('C2R1', 1, 'A'),
-('C2R1', 2, 'A'),
-('C2R1', 3, 'A'),
-('C2R1', 4, 'A'),
-('C2R1', 5, 'A'),
-('C2R1', 6, 'A'),
-('C2R1', 7, 'A'),
-('C2R1', 8, 'A'),
-
-('C2R2', 1, 'A'),
-('C2R2', 2, 'A'),
-('C2R2', 3, 'A'),
-('C2R2', 4, 'A'),
-
-('C2R2', 1, 'B'),
-('C2R2', 2, 'B'),
-('C2R2', 3, 'B'),
-('C2R2', 4, 'B');
-
--- Seats (D) - Cinema2
-INSERT INTO Seats(RoomID, SeatNumber, [Row], [Type])
-VALUES 
-('C2R2', 5, 'B', 'D'),
-('C2R2', 6, 'B', 'D'),
-('C2R2', 7, 'B', 'D'),
-('C2R2', 8, 'B', 'D');
-
+('C1R2', 8, 'B', 'D');
+GO
 
 --BasePrice:
 -- AgeGroup: 1; SeatType: 0 --> BasePrice: 65000
@@ -849,6 +903,18 @@ VALUES
 (2, 1, 45000, 2, 0),
 (3, 1, 135000, 1, 1); 
 
+-- Movie
+INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
+VALUES 
+(1, N'KÈO CUỐI ', 109, 1, 'Kelly Marcel', N'Tom Hardy sẽ tái xuất trong bom tấn Venom: The Last Dance và phải đối mặt với toàn bộ chủng tộc Symbiote', 'Other', '2024-09-25', 'https://youtu.be/6yCMRxGI4RA', 'T13', N'Hành Động'),
+(2, N'NGÀY XƯA CÓ MỘT CHUYỆN TÌNH', 135, 1, N'Trịnh Đình Lê Minh' ,N'Ngày Xưa Có Một Chuyện Tình xoay quanh câu chuyện tình bạn, tình yêu giữa hai chàng trai và một cô gái từ thuở ấu thơ ...', 'VietNam', '2024-01-10', 'https://youtu.be/4Y2q2tx1Ee8', 'T16', N'Tình Cảm'),
+(3, N'CÔ DÂU HÀO MÔN', 114, 1, N'Vũ Ngọc Đãng', N'Bộ phim xoay quanh câu chuyện làm dâu nhà hào môn dưới góc nhìn hài hước và châm biếm, hé lộ những câu chuyện kén dâu chọn rể trong giới thượng lưu...', 'VietNam', '2024-10-18', 'https://youtu.be/OP5X4Bp-g78', 'T18', N'Tâm Lý'),
+(4, N'VÂY HÃM TẠI ĐÀI BẮC', 100, 1, N'George Huang', N'Theo chân John Lawlor là một đặc vụ DEA cừ khôi bất khả chiến bại, anh sẽ không tiếc hi sinh bất cứ điều gì để hoàn thành nhiệm vụ được giao.Trong khi đó, Joey Kwang là "người vận chuyển" hàng đầu ở Đài Bắc..', 'Other', '2024-01-11', NULL, 'T18', N'Hồi Hộp'),
+(5, N'ELLI VÀ BÍ ẨN CHIẾC TÀU MA', 86, 1, N'Piet De Rycker', N'Một hồn ma nhỏ vô gia cư gõ cửa nhà những cư dân lập dị của Chuyến tàu ma để tìm kiếm một nơi thuộc về, cô bé vô tình thu hút sự chú ý từ "thế giới bên ngoài", ...', 'Other', '2024-10-25', 'https://youtu.be/j_rApVdDV-E', 'P', N'Hoạt hình'),
+(6, N'TIẾNG GỌI CỦA OÁN HỒN', 108, 1, N'Takashi Shimizu', N'Năm 1992, một cô gái rơi từ mái của trường trung học cơ sở. Bên cạnh thi thể của cô ấy là một máy ghi âm cassette vẫn đang ghi lại...', 'Other', '2024-01-11', 'https://youtu.be/fBubjidz0vw', 'T18', N'Kinh Dị'),
+(7, N'VÙNG ĐẤT BỊ NGUYỀN RỦA', 117, 1, N'Panu Aree', N'Sau cái chết của vợ, để trốn tránh quá khứ, Mit và cô con gái May chuyển đến một ngôi nhà mới ở khu phố ngoại ô. Trong lúc chuẩn bị xây dựng một miếu thờ thiên trước nhà mới,...', 'Other', '2024-01-11', 'https://youtu.be/4X-hI7qCJ98', 'T18', N'Kinh Dị'),
+(8, N'QUỶ ĂN TẠNG 2', 120, 1, N'Taweewat Wantha', 'Khi họ đuổi theo linh hồn mặc áo choàng đen, tiếng kêu đầy ám ảnh của Tee Yod sắp quay trở lại một lần nữa...', 'Other', '2024-10-18', 'https://youtu.be/3ghi6ffcfAI', 'T18', N'Kinh Dị');
+GO
 
 -- ShowTimes
 INSERT INTO ShowTimes (ShowTimeID, MovieID, StartTime)
@@ -906,90 +972,72 @@ VALUES
 -- Ticket
 INSERT INTO Ticket(PriceID, SeatID, MovieID, ShowTimeID)
 VALUES
-(1, 'C1R1A1', 1, 1),  -- PriceID 1, Seat C1R1A1, Movie Inception, ShowTime 08:00
-(2, 'C1R1A2', 1, 1),  -- PriceID 2, Seat C1R1A2, Movie Inception, ShowTime 08:00
-(3, 'C1R1A3', 1, 7);  -- PriceID 3, Seat C1R1A3, Movie Shawshank Redemption, ShowTime 08:30
+(1, 'C1R1A1', 1, 1), 
+(2, 'C1R1A2', 1, 1),  
+(3, 'C1R1A3', 1, 7),
+(1, 'C1R1A4', 1, 7), 
+(2, 'C1R1A5', 4, 19), 
+(3, 'C1R1A6', 5, 25), 
+(1, 'C1R1A7', 6, 31), 
+(2, 'C1R1A8', 7, 37), 
+(3, 'C1R2A1', 8, 43), 
+(1, 'C1R2A2', 1, 3),  
+(2, 'C1R2A3', 2, 4), 
+(3, 'C1R2A4', 3, 5); 
+GO
 
-INSERT INTO Ticket(PriceID, SeatID, MovieID, ShowTimeID)
+-- Discounts
+INSERT INTO Discounts (DiscountID, DiscountValue, [Description])
 VALUES
-(1, 'C1R1A4', 1, 7), -- PriceID 1, Seat C1R1A4, Movie The Dark Knight, ShowTime 09:00
-(2, 'C1R1A5', 4, 19), -- PriceID 2, Seat C1R1A5, Movie Pulp Fiction, ShowTime 08:00
-(3, 'C1R1A6', 5, 25), -- PriceID 3, Seat C1R1A6, Movie Forrest Gump, ShowTime 09:00
-(1, 'C1R1A7', 6, 31), -- PriceID 1, Seat C1R1A7, Movie The Matrix, ShowTime 08:30
-(2, 'C1R1A8', 7, 37), -- PriceID 2, Seat C1R1A8, Movie Interstellar, ShowTime 09:00
-(3, 'C1R2A1', 8, 43), -- PriceID 3, Seat C1R2A1, Movie Silence of the Lambs, ShowTime 08:00
-(1, 'C1R2A2', 1, 3),  -- PriceID 1, Seat C1R2A2, Movie Inception, ShowTime 14:00
-(2, 'C1R2A3', 2, 4),  -- PriceID 2, Seat C1R2A3, Movie Shawshank Redemption, ShowTime 17:00
-(3, 'C1R2A4', 3, 5);  -- PriceID 3, Seat C1R2A4, Movie The Dark Knight, ShowTime 20:00
+('DISC00001', 0.15, 'For C''VIP'),
+('DISC00002', 0.1, 'For C''FRIEND');
+GO
 
-INSERT INTO Ticket(PriceID, SeatID, MovieID, ShowTimeID)
-VALUES
-(1, 'C2R1A1', 1, 1),  
-(2, 'C2R1A2', 1, 1),  
-(3, 'C2R1A3', 1, 7),
-(1, 'C2R1A4', 1, 7), 
-(2, 'C2R1A5', 4, 19), 
-(3, 'C2R1A6', 5, 25);
-
-
--- =========== Movies =========== --
-select * from Movies
--- Movies
-INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
+-- insert data for PaymentMethods table
+INSERT INTO PaymentMethods (PaymentMethodID, MethodName, Description)
 VALUES 
-(1, 'Inception', 148, 1, 'Christopher Nolan', 'A thief who steals corporate secrets through dream-sharing technology.', 'English', '2010-07-16', 'https://www.youtube.com/watch?v=YoHD9XEInc0', 'T13', 'Sci-Fi'),
-(2, 'The Shawshank Redemption', 142, 0, 'Frank Darabont', 'Two imprisoned men bond over a number of years.', 'English', '1994-09-23', 'https://www.youtube.com/watch?v=6hB3S9bIaco', 'T18', 'Drama'),
-(3, 'The Dark Knight', 152, 1, 'Christopher Nolan', 'The Joker emerges from his mysterious past.', 'English', '2008-07-18', 'https://www.youtube.com/watch?v=EXeTwQWrcwY', 'T13', 'Action'),
-(4, 'Pulp Fiction', 154, 0, 'Quentin Tarantino', 'The lives of two mob hitmen, a boxer, a gangsters wife', 'English', '1994-10-14', 'https://www.youtube.com/watch?v=s7EdQ4FqBHs', 'T18', 'Crime'),
-(5, 'Forrest Gump', 142, 0, 'Robert Zemeckis', 'The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal, and other historical events unfold through the perspective of an Alabama man.', 'English', '1994-07-06', 'https://www.youtube.com/watch?v=bLvqoHBptjg', 'T13', 'Drama'),
-(6, 'The Matrix', 136, 1, 'The Wachowskis', 'A computer hacker learns about the true nature of his reality.', 'English', '1999-03-31', 'https://www.youtube.com/watch?v=vKQi0pVi908', 'T13', 'Sci-Fi'),
-(7, 'Interstellar', 169, 1, 'Christopher Nolan', 'A team of explorers travel through a wormhole in space.', 'English', '2014-11-07', 'https://www.youtube.com/watch?v=zSWdZVtXT7E', 'T18', 'Adventure'),
-(8, 'The Silence of the Lambs', 118, 0, 'Jonathan Demme', 'A young FBI cadet must confide in an incarcerated and manipulative killer to catch another serial killer.', 'English', '1991-02-14', 'https://www.youtube.com/watch?v=4Nf1_KhAs0Y', 'T18', 'Thriller');
+(1, 'Credit Card', 'Payments made via major credit cards like Visa, MasterCard, and American Express'),
+(2, 'Debit Card', 'Payments made directly from a bank account using a debit card'),
+(3, 'MoMo', 'Online payments made through MoMo'),
+(4, 'Bank Transfer', 'Direct transfer of funds from bank account to bank account'),
+(5, 'Cash', 'Payments made with physical cash'),
+(6, 'Mobile Payment', 'Payments made via mobile wallets such as Apple Pay or Google Wallet');
+
+-- Customer
+INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
+VALUES 
+('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
+('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
+('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
+('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
+('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'); 
+GO
 
 
 -- ========== DETAIL BOOKING ========== --
 INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
-VALUES (1, 'B00001', 'TC1M1S1-2EAB3A13', 'Ticket');
+VALUES 
+(1, 'B00001', 'TC1M1S1-C1R1A1', 'Ticket'),
+(3, 'B00002', 'TC1M1S1-C1R1A2', 'Ticket'),
+(6, 'B00003', 'TC1M1S3-C1R2A2', 'Ticket'),
+(10, 'B00005', 'TC1M1S7-C1R1A3', 'Ticket'),
+(11, 'B00006', 'TC1M1S7-C1R1A4', 'Ticket'),
+(14, 'B00008', 'TC1M3S5-C1R2A4', 'Ticket'),
+(15, 'B00009', 'TC1M6S31-C1R1A7', 'Ticket');
 
--- Insert for Food (without specifying PricePerUnit)
-INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
-VALUES (2, 'B00001', 'FOOD-25702CE0', 1, 'Food');
-
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
-VALUES (3, 'B00002', 'FOOD-25702CE0', 2, 'Food')
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
-VALUES (4, 'B00003', 'TC1M1S1-B93F4D6D', 'Ticket')
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
-VALUES (5, 'B00004', 'TC1M5S25-EB92AC39', 'Ticket');
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
-VALUES (6, 'B00004', 'FOOD-5C5F15A5', 3, 'Food');
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
-VALUES (7, 'B00004', 'FOOD-AD8D8F00', 1, 'Food');
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
-VALUES (8, 'B00004', 'FOOD-25702CE0', 3, 'Food');
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
-VALUES (9, 'B00006', 'FOOD-25702CE0', 2, 'Food');
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
-VALUES (10, 'B00007', 'FOOD-25702CE0', 3, 'Food');
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
-VALUES (11, 'B00008', 'TC1M3S5-687D0BEA', 'Ticket');
+GO
 
 INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
 VALUES 
-(12, 'B00008', 'FOOD-25702CE0', 2, 'Food'),
-(13, 'B00009', 'FOOD-25702CE0', 4, 'Food');
-
-INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
-VALUES (14, 'B00009', 'TC1M7S37-2FA21465', 'Ticket');
+(2, 'B00001', 'FOOD-046D50EE', 2, 'Food'),
+(4, 'B00002', 'FOOD-046D50EE', 4, 'Food'),
+(5, 'B00002', 'FOOD-5031F7FE', 3, 'Food'),
+(7, 'B00003', 'FOOD-5031F7FE', 2, 'Food'),
+(8, 'B00004', 'FOOD-F8EBC2CD', 2, 'Food'),
+(9, 'B00004', 'FOOD-C1185356', 1, 'Food'),
+(12, 'B00006', 'FOOD-FC9B2DF0', 1, 'Food'),
+(13, 'B00007', 'FOOD-2F6C7F33', 2, 'Food');
+GO
 
 
 -- ========== Booking ========== --
@@ -1000,55 +1048,32 @@ VALUES
 ('B00003', 'C00003', NULL),
 ('B00004', 'C00004', NULL),
 ('B00005', 'C00005', NULL);
+GO
 
--- Test cac truong hop co ngay giam gia
 INSERT INTO Booking(BookingID, CustomerID, TransactionDate, BookingDate)
 VALUES
-('B00006', 'C00005', NULL, '2024-10-28 20:20:41.683'),
-('B00007', 'C00005', NULL, '2024-10-30 20:20:41.683'),
-('B00008', 'C00005', NULL, '2024-10-30 20:20:41.683'),
-('B00009', 'C00003', NULL, '2024-10-27 20:20:41.683');
+('B00006', 'C00005', NULL, '2024-10-30 20:20:41.683'),
+('B00007', 'C00003', NULL, '2024-10-28 20:20:41.683'),
+('B00008', 'C00002', NULL, '2024-10-27 20:20:42.683'),
+('B00009', 'C00003', NULL, '2024-10-26 23:20:21.243');
+GO
 
 
--- ========== Customers ========== --
--- Thêm dữ liệu vào bảng Customers
-INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
-VALUES 
-('C00001', 'john_doe', 'John', 'Doe', 'M', '1234567890', 'john.doe@example.com', 'New York', '123 Main St', 'Regular'),
-('C00002', 'jane_smith', 'Jane', 'Smith', 'F', '0987654321', 'jane.smith@example.com', 'Los Angeles', '456 Elm St', 'CFRIEND'),
-('C00003', 'alice_johnson', 'Alice', 'Johnson', 'F', '2345678901', 'alice.johnson@example.com', 'Chicago', '789 Oak St', 'CVIP'),
-('C00004', 'bob_brown', 'Bob', 'Brown', 'M', '3456789012', 'bob.brown@example.com', 'Houston', '321 Pine St', 'Regular'),
-('C00005', 'charlie_wilson', 'Charlie', 'Wilson', 'M', '4567890123', 'charlie.wilson@example.com', 'Miami', '654 Cedar St', 'CFRIEND');
-
--- ========== Discounts ========== --
-INSERT INTO Discounts (DiscountID, DiscountValue, [Description])
-VALUES
-('DISC00001', 0.15, 'For C''VIP'),
-('DISC00002', 0.1, 'For C''FRIEND');
-
--- ========== Payment Methods ========== --
-INSERT INTO PaymentMethods (PaymentMethodID, MethodName, [Description])
-VALUES
-(1, 'MBBank', 'ngan hang mb'),
-(2, 'VCBank', 'vietcombank'),
-(3, 'Momo', 'Vi Momo');
-
-
+-- Transaction
 INSERT INTO Transactions(TransactionID, BookingID, PaymentMethodID)
 VALUES
 ('TRANS00001', 'B00001', 1),
-('TRANS00002', 'B00002', 1),
-('TRANS00003', 'B00003', 1),
-('TRANS00004', 'B00004', 1),
+('TRANS00002', 'B00002', 2),
+('TRANS00003', 'B00003', 3),
+('TRANS00004', 'B00004', 4),
 ('TRANS00005', 'B00005', 1),
-('TRANS00006', 'B00006', 1),
-('TRANS00007', 'B00007', 1),
-('TRANS00008', 'B00008', 1),
-('TRANS00009', 'B00009', 1);
+('TRANS00006', 'B00006', 3),
+('TRANS00007', 'B00007', 5),
+('TRANS00008', 'B00008', 6),
+('TRANS00009', 'B00009', 3);
+GO
 
-select * from Discounts
-select * from DetailBooking
-select * from Booking
+
 
 EXEC CalculateFinalAmount @BookingID = 'B00001'
 EXEC CalculateFinalAmount @BookingID = 'B00002'
@@ -1078,9 +1103,7 @@ select * from Customers
 select * from Discounts
 select * from PaymentMethods
 select * from DetailBooking
-
-
-
+GO
 
 
 delete from FoodAndBeverages
@@ -1097,6 +1120,4 @@ delete from Customers
 delete from Discounts
 delete from PaymentMethods
 delete from DetailBooking
-
-
-drop procedure CalculateFinalAmount
+GO
