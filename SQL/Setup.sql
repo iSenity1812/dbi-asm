@@ -188,8 +188,14 @@ CREATE TABLE DetailBooking (
 
 );
 
--- ===============================================================
--- =======================TRIGGER================================= --
+SELECT * FROM SYS.triggers;
+DELETE FROM SYS.triggers;
+
+
+
+
+
+
 -- Trigger for insertion on Customers table
 -- Phone format: 10 digits
 -- CustomerID format: CUSTXXXXX
@@ -887,17 +893,6 @@ INSERT INTO FoodAndBeverages (FoodID, ProductName, Category, Price, CinemaID) VA
 ('F00017', N'Poca Wavy 54gr', 'Poca', 28000, 1);
 GO
 
--- Customer
-INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
-VALUES 
-('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
-('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
-('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
-('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
-('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'); 
-GO
-
-
 
 
 -- Thêm phòng cho Cinema 
@@ -954,7 +949,6 @@ VALUES
 (2, 1, 45000, 2, 0),
 (3, 1, 135000, 1, 1); 
 GO
-
 
 INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
 VALUES 
@@ -1055,8 +1049,17 @@ VALUES
 (6, 'Mobile Payment', 'Payments made via mobile wallets such as Apple Pay or Google Wallet');
 GO
 
+-- Customer
+INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
+VALUES 
+('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
+('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
+('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
+('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
+('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'); 
+GO
+
 -- Booking
-select * from Booking
 INSERT INTO Booking(BookingID, CustomerID, TransactionDate)
 VALUES
 ('B00001', 'C00001', NULL),
@@ -1154,5 +1157,7 @@ EXEC CalculateFinalAmount @BookingID = 'B00002'
 EXEC CalculateFinalAmount @BookingID = 'B00003'
 EXEC CalculateFinalAmount @BookingID = 'B00004'
 GO
+
+delete from Transactions
 
 select * from sys.triggers
