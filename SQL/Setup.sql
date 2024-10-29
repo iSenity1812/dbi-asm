@@ -188,11 +188,6 @@ CREATE TABLE DetailBooking (
 
 );
 
-SELECT * FROM SYS.triggers;
-DELETE FROM SYS.triggers;
-
-
-
 
 
 
