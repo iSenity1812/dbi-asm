@@ -794,41 +794,6 @@ BEGIN
 END;
 GO
 
--- SELECTION
-select * from FoodAndBeverages
-select * from Cinemas
-select * from Rooms
-select * from Seats
-select * from TicketPrice
-select * from Ticket
-select * from Movies
-select * from ShowTimes
-select * from Booking
-select * from Transactions
-select * from Customers
-select * from Discounts
-select * from PaymentMethods
-select * from DetailBooking
-GO
-
--- DELETION
-delete from FoodAndBeverages
-delete from Cinemas
-delete from Rooms
-delete from Seats
-delete from TicketPrice
-delete from Ticket
-delete from Movies
-delete from ShowTimes
-delete from Booking
-delete from Transactions
-delete from Customers
-delete from Discounts
-delete from PaymentMethods
-delete from DetailBooking
-GO
-
-
 
 -- Cinema
 INSERT INTO Cinemas (CinemaID, Name, Location, TotalScreens) VALUES
@@ -1041,9 +1006,6 @@ VALUES
 GO
 
 -- DetailBooking
-select * from DetailBooking
-select * from Ticket
-delete from DetailBooking
 INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
 VALUES 
 (1, 'B00001', 'TC1M1S1-C1R1A1', 'Ticket'),
@@ -1126,7 +1088,5 @@ EXEC CalculateFinalAmount @BookingID = 'B00005'
 EXEC CalculateFinalAmount @BookingID = 'B00006'
 EXEC CalculateFinalAmount @BookingID = 'B00007'
 GO
-
-delete from Transactions
 
 select * from sys.triggers
