@@ -1,193 +1,3 @@
-
--- Create table Customers
-CREATE TABLE Customers (
-	CustomerID VARCHAR(10) PRIMARY KEY,
-	Username NVARCHAR(45) NOT NULL,
-	[FirstName] NVARCHAR(45) NOT NULL,
-	[LastName] NVARCHAR(45) NOT NULL,
-	Gender CHAR(1) NOT NULL,
-	Phone CHAR(10) UNIQUE,
-	Email VARCHAR(255) UNIQUE,
-	City NVARCHAR(50),
-	[Address] NVARCHAR(50),
-	MembershipType VARCHAR(50) --Regular/CFRIEND/CVIP
-);
-
--- Create table Movies
-CREATE TABLE Movies (
-	MovieID INT PRIMARY KEY,
-	Title NVARCHAR(255),
-	Duration INT,
-	Subtitle BIT,
-	Director NVARCHAR(50),
-	[Description] NVARCHAR(500),
-	[Language] NVARCHAR(50),
-	ReleaseDate DATETIME,
-	TrailerURL VARCHAR(255),
-	AgeRestriction VARCHAR(3),
-	Genre NVARCHAR(50),
-);
-
-alter table Movies
-alter column Genre nvarchar(50);
-
-
--- Create table Cinemas
-CREATE TABLE Cinemas (
-	CinemaID INT PRIMARY KEY,
-	[Name] NVARCHAR(255) NOT NULL,
-	[Location] NVARCHAR(255) NOT NULL,
-	TotalScreens INT NOT NULL,
-);
-
--- Create table Discounts
-CREATE TABLE Discounts (
-	DiscountID VARCHAR(10) PRIMARY KEY,
-	[Description] NVARCHAR(255),
-	DiscountValue DECIMAL(10, 2),
-);
-
-
-
--- Create table PaymentMethods
-CREATE TABLE PaymentMethods (
-	PaymentMethodID INT PRIMARY KEY,
-	MethodName VARCHAR(50),
-	[Description] NVARCHAR(255)
-);
-
-
--- Create table Booking
-CREATE TABLE Booking (
-	BookingID VARCHAR(30) PRIMARY KEY,
-	CustomerID VARCHAR(10) NOT NULL,
-	TransactionDate DATETIME, -- automatic current date
-	BookingDate DATETIME DEFAULT CURRENT_TIMESTAMP,
-	FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
-);
-
-
--- Create table Transactions
-CREATE TABLE Transactions (
-	TransactionID VARCHAR(10) PRIMARY KEY,
-	BookingID VARCHAR(30) NOT NULL,
-	FinalAmount DECIMAL(10, 2) NULL,
-	DiscountID VARCHAR(10) NULL,
-	PaymentMethodID INT,
-	CustomerID VARCHAR(10),
-
-	FOREIGN KEY (BookingID) REFERENCES Booking(BookingID),
-	FOREIGN KEY (DiscountID) REFERENCES Discounts(DiscountID),
-	FOREIGN KEY (PaymentMethodID) REFERENCES PaymentMethods(PaymentMethodID),
-	FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
-);
-
--- Create table TicketPrice
-CREATE TABLE TicketPrice (
-	PriceID INT PRIMARY KEY,
-	CinemaID INT,
-	BasePrice DECIMAL(10, 2),
-	AgeGroup INT,
-	SeatType INT,
-	FOREIGN KEY (CinemaID) REFERENCES Cinemas(CinemaID)
-);
-
-
--- Create table Rooms
-CREATE TABLE Rooms (
-	RoomID VARCHAR(10) PRIMARY KEY,
-	CinemaID INT,
-	Capacity INT,
-
-	FOREIGN KEY (CinemaID) REFERENCES Cinemas(CinemaID)
-);
-
-
-
-	-- Create table Seats
-CREATE TABLE Seats (
-	SeatID VARCHAR(20) PRIMARY KEY,
-	RoomID VARCHAR(10) NOT NULL,
-	SeatNumber INT NOT NULL,
-	[Row] CHAR(1),
-	[Status] BIT,
-	[Type] CHAR(1),
-
-	CONSTRAINT FK_Room FOREIGN KEY (RoomID) REFERENCES Rooms(RoomID),
-	CONSTRAINT UQ_Room_Seat UNIQUE (RoomID, SeatNumber, [Row]) --  dam bao cac ghe la duy nhat cho moi roomID
-);
-
-
-
--- Create table ShowTimes
-CREATE TABLE ShowTimes (
-	ShowTimeID INT PRIMARY KEY, 
-	MovieID INT NOT NULL,
-	StartTime VARCHAR(10),
-
-	FOREIGN KEY (MovieID) REFERENCES Movies(MovieID)
-);
-
--- Create table Ticket
-CREATE TABLE Ticket (
-	TicketID VARCHAR(30) PRIMARY KEY,
-	PriceID INT NOT NULL,
-	SeatID VARCHAR(20) NOT NULL,
-	MovieID INT NOT NULL,
-	ShowTimeID INT NOT NULL,
-
-
-	FOREIGN KEY (PriceID) REFERENCES TicketPrice(PriceID),
-	FOREIGN KEY (SeatID) REFERENCES Seats(SeatID),
-	FOREIGN KEY (MovieID) REFERENCES Movies(MovieID),
-	FOREIGN KEY (ShowTimeID) REFERENCES ShowTimes(ShowTimeID)
-);
-
-
--- Create table FoodAndBeverages
-CREATE TABLE FoodAndBeverages (
-	FoodID VARCHAR(30) PRIMARY KEY,
-	CinemaID INT NOT NULL,
-	ProductName NVARCHAR(255),
-	Category VARCHAR(255),
-	Price DECIMAL(10, 2),
-
-	FOREIGN KEY (CinemaID) REFERENCES Cinemas(CinemaID)
-);
-
-
--- Create table DetailBooking
-CREATE TABLE DetailBooking (
-	DetailBookingID INT PRIMARY KEY,
-	BookingID VARCHAR(30) NOT NULL,
-	TicketID VARCHAR(30) NULL, -- Nullable
-	FoodID VARCHAR(30) NULL, -- Nullable
-	PricePerUnit DECIMAL(10, 2),
-	Quantity INT,
-	ProductType VARCHAR(20) NOT NULL, -- Values 'Ticket' or 'Food'
-
-
-	-- Foreign key
-	FOREIGN KEY (BookingID) REFERENCES Booking(BookingID),
-	FOREIGN KEY (TicketID) REFERENCES Ticket(TicketID),
-	FOREIGN KEY (FoodID) REFERENCES FoodAndBeverages(FoodID), -- reference to either FoodAndBeverages or Ticket
-
-	-- 1 of them is not null
-	CONSTRAINT CHK_TicketOrFood CHECK (TicketID IS NOT NULL OR FoodID IS NOT NULL),
-
-	-- Ensure ProductType aligns with either TicketID or FoodID
-	CONSTRAINT CHK_ProductType CHECK (
-	    (ProductType = 'Ticket' AND TicketID IS NOT NULL AND FoodID IS NULL) OR 
-	    (ProductType = 'Food' AND FoodID IS NOT NULL AND TicketID IS NULL)
-	),
-
-	CONSTRAINT UQ_Booking_TicketFood UNIQUE (BookingID, TicketID, FoodID)
-
-	--CONSTRAINT UQ_Booking_Ticket UNIQUE (BookingID, TicketID),
-    --CONSTRAINT UQ_Booking_Food UNIQUE (BookingID, FoodID), -- Unique composite key -- Trong truong hop co nhieu phan loai hang
-
-);
-
 -- Trigger for insertion on Customers table
 -- Phone format: 10 digits
 -- CustomerID format: CXXXXX
@@ -469,6 +279,7 @@ GO
 
 
 
+
 -- Tao RoomID
 CREATE TRIGGER GenerateRoomID
 ON Rooms
@@ -531,7 +342,7 @@ BEGIN
 	DECLARE cur CURSOR FOR
 	SELECT RoomID, SeatNumber, [Row], COALESCE([Type], 'S') AS [Type]
 	-- Type: Single (S) / Double (D)
-	-- Colaesce de kiem tra xem cai type co phai null ko neu ma co thi cho no la S(Single)
+	-- Colaesce de kiem tra xem cai type co phai null ko neu ma co thi gan gia tri la S(Single)
 	FROM inserted
 
 	OPEN cur
@@ -578,7 +389,6 @@ GO
 
 
 -- Trigger tu dong cap nhat PricePerUnit
-
 CREATE TRIGGER SetPricePerUnit
 ON DetailBooking
 AFTER INSERT
@@ -609,6 +419,7 @@ ON DetailBooking
 AFTER INSERT
 AS
 BEGIN
+	-- Dat so luong ticket la 1 cho cac record moi
 	UPDATE db
 	SET db.Quantity = 1
 	FROM DetailBooking db
@@ -619,7 +430,6 @@ END;
 GO
 
 -- Trigger tu  dong ktra va set DiscountID
-
 CREATE TRIGGER SetDiscount
 ON Transactions
 AFTER INSERT
@@ -632,6 +442,7 @@ BEGIN
 	JOIN inserted i ON i.TransactionID = t.TransactionID
 	WHERE c.MembershipType = 'CVIP';
 
+	-- Cap nhat DiscountID la DISC
 	UPDATE t
 	SET t.DiscountID = 'DISC00002'
 	FROM Transactions t
@@ -641,12 +452,13 @@ BEGIN
 END;
 GO
 
--- Trigger tu dong cap nhat CustomerID dua vao BookingID cho Transactions
+-- Trigger tu dong cap nhat CustomerID thong qua BookingID cho Transactions
 CREATE TRIGGER SetCustomer
 ON Transactions
 AFTER INSERT
 AS
 BEGIN
+	-- Cap nhat CustomerID trong bang Transactions tu bang Booking
 	UPDATE t
 	SET t.CustomerID = b.CustomerID
 	FROM Transactions t
@@ -655,6 +467,7 @@ BEGIN
 END;
 GO
 
+-- param: CustomerID
 CREATE FUNCTION GetDiscountValue(@CustomerID VARCHAR(10))
 RETURNS DECIMAL(10, 2)
 AS
@@ -662,7 +475,7 @@ BEGIN
 	DECLARE @DiscountID VARCHAR(10),
 			@DiscountValue DECIMAL(10, 2) = 0;
 
-	-- Lay DiscountValue tu Discount dua tren MembershipType
+	-- Lay DiscountValue dua tren MembershipType
 	SELECT @DiscountID = 
 		CASE
 			WHEN MembershipType = 'CVIP' THEN 'DISC00001'
@@ -672,7 +485,7 @@ BEGIN
 	FROM Customers
 	WHERE CustomerID = @CustomerID;
 
-	-- Neu co DiscountID thi lay value cua no
+	-- Neu co DiscountID thi lay value tuong ung
 	IF @DiscountID IS NOT NULL
 	BEGIN
 		SELECT @DiscountValue = DiscountValue
@@ -684,6 +497,7 @@ BEGIN
 END;
 GO
 
+-- Tinh toan FinalAmount dua tren BookingID
 CREATE PROCEDURE CalculateFinalAmount(@BookingID VARCHAR(30))
 AS
 BEGIN
@@ -718,19 +532,19 @@ BEGIN
 	-- Lay Discount Value
 	SET @DiscountValue = dbo.GetDiscountValue(@CustomerID);
 
-	-- Check ngay
+	-- Ktra gio va ngay de dieu chinh gia ve
 	-- T2: ai cung giam (gia ve), ko ap dung giam gia cua membership
 	-- T4: giam gia ve cua membership (45), giam gia tri bap nuoc theo discount value
 	Set @CurHour = DATEPART(HOUR, @BookingDate);
 	Set @Date = DATENAME(WEEKDAY, @BookingDate);
 
-	-- Tao bang temp
+	-- Tao bang tam thoi de lay chi tiet dat cho
 	WITH Details AS (
 		SELECT * 
 		FROM DetailBooking db
 		WHERE @BookingID = db.BookingID
 	)
-	--Lay ticket quantity va price (neu ma ko co 1 trong 2 cot thi de cai cot null -> 0)
+	--Lay ticket, food quantity va price
 	SELECT
 		@TicketPrice = COALESCE(SUM(CASE WHEN d.ProductType = 'Ticket' THEN d.PricePerUnit END), 0),
 		@TotalFoodPrice = COALESCE(SUM(CASE WHEN d.ProductType = 'Food' THEN d.PricePerUnit * d.Quantity END), 0),
@@ -739,7 +553,7 @@ BEGIN
 
 
 
-	-- Dieu chinh gia ve
+	-- Dieu chinh gia ve theo gio va ngay
 	IF (@CurHour < 10 OR @CurHour >= 22)
 		SET @TicketPrice = 45000;
 	ELSE IF (@Date = 'Monday')
@@ -749,10 +563,11 @@ BEGIN
 			SET @TicketPrice = 45000;
 			SET @TotalFoodPrice = @TotalFoodPrice * (1 - @DiscountValue)
 		END
+
 	-- Calculate Final Amount
 	SET @FinalAmount = @TotalFoodPrice + @TicketPrice
 
-	-- Lay discount ID
+	-- Lay discount ID de cap nhat cho Transactions
 	SELECT @DiscountID = 
 		CASE
 			WHEN @MembershipType = 'CVIP' THEN 'DISC00001'
@@ -760,7 +575,7 @@ BEGIN
 			ELSE NULL
 		END
 
-	-- Update vao bang Transaction
+	-- Cap nhat FinalAmount va DiscountID vao bang Transaction
 	UPDATE Transactions
 	SET FinalAmount = @FinalAmount, DiscountID = @DiscountID
 	WHERE BookingID = @BookingID
@@ -785,8 +600,6 @@ BEGIN
         N'Thanh toán đã hoàn tất!' AS Message;  -- Thông báo
 END;
 GO
-
-select * from DetailBooking
 
 -- SELECTION
 select * from FoodAndBeverages
