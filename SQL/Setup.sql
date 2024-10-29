@@ -286,43 +286,54 @@ GO
 
 
 
-
-
--- Tu dong tao foodID
-CREATE TRIGGER GenerateFoodID
-ON FoodAndBeverages
-INSTEAD OF INSERT
-AS
-BEGIN
-	DECLARE @FoodID VARCHAR(30),
-			@GUID VARCHAR(8), -- Lay 8 ky tu dau cua GUID
-			@ProductName VARCHAR(255),
-			@Price DECIMAL(10, 2),
-			@Category VARCHAR(255),
-			@CinemaID INT;
-	
-	DECLARE cur CURSOR FOR
-	SELECT ProductName, CinemaID, Category, Price
-	FROM inserted
-
-	OPEN cur;
-	FETCH NEXT FROM cur INTO @ProductName, @CinemaID, @Category, @Price;
-
-	WHILE @@FETCH_STATUS = 0
-	BEGIN
-		SET @GUID = SUBSTRING(CONVERT(VARCHAR(36), NEWID()), 1, 8);
-		SET @FoodID = CONCAT('FOOD-', @GUID);
-
-		INSERT INTO FoodAndBeverages(FoodID, ProductName, CinemaID, Category, Price)
-		VALUES (@FoodID, @ProductName, @CinemaID, @Category, @Price );
-
-		FETCH NEXT FROM cur INTO @ProductName, @CinemaID, @Category, @Price;
-		
-	END
-	CLOSE cur;
-	DEALLOCATE cur;
+-- Trigger for insertion on FoodAndBeverages table
+CREATE TRIGGER CheckFoodID ON FoodAndBeverages
+AFTER INSERT, UPDATE
+AS BEGIN
+    IF EXISTS (SELECT 1 FROM inserted
+    WHERE FoodID NOT LIKE 'F[0-9][0-9][0-9][0-9][0-9]')
+    BEGIN
+        PRINT('Error! Insertion canceled!');
+        ROLLBACK TRANSACTION;
+    END
 END;
 GO
+
+-- Tu dong tao foodID
+-- CREATE TRIGGER GenerateFoodID
+-- ON FoodAndBeverages
+-- INSTEAD OF INSERT
+-- AS
+-- BEGIN
+-- 	DECLARE @FoodID VARCHAR(30),
+-- 			@GUID VARCHAR(8), -- Lay 8 ky tu dau cua GUID
+-- 			@ProductName VARCHAR(255),
+-- 			@Price DECIMAL(10, 2),
+-- 			@Category VARCHAR(255),
+-- 			@CinemaID INT;
+	
+-- 	DECLARE cur CURSOR FOR
+-- 	SELECT ProductName, CinemaID, Category, Price
+-- 	FROM inserted
+
+-- 	OPEN cur;
+-- 	FETCH NEXT FROM cur INTO @ProductName, @CinemaID, @Category, @Price;
+
+-- 	WHILE @@FETCH_STATUS = 0
+-- 	BEGIN
+-- 		SET @GUID = SUBSTRING(CONVERT(VARCHAR(36), NEWID()), 1, 8);
+-- 		SET @FoodID = CONCAT('FOOD-', @GUID);
+
+-- 		INSERT INTO FoodAndBeverages(FoodID, ProductName, CinemaID, Category, Price)
+-- 		VALUES (@FoodID, @ProductName, @CinemaID, @Category, @Price );
+
+-- 		FETCH NEXT FROM cur INTO @ProductName, @CinemaID, @Category, @Price;
+		
+-- 	END
+-- 	CLOSE cur;
+-- 	DEALLOCATE cur;
+-- END;
+-- GO
 
 -- Tao RoomID
 CREATE TRIGGER GenerateRoomID
@@ -821,26 +832,26 @@ GO
 
 -- ============ INSERT DATA ============ --
 -- Food
-INSERT INTO FoodAndBeverages (ProductName, Category, Price, CinemaID) VALUES
-(N'Combo Party', 'Combo', 210000, 1), -- CinemaID 1
-(N'Combo Solo', 'Combo', 94000, 1),
-(N'Combo Couple', 'Combo', 115000, 1),
-(N'Combo Nha Gau', 'Combo2', 259000, 1),  
-(N'Combo Gau', 'Combo2', 119000, 1),      
-(N'Combo Co Gau', 'Combo2', 129000, 1),   
-(N'Nuoc cam Teppy 327ml', 'Drink', 28000, 1),  
-(N'Nuoc suoi Dasani', 'Drink', 20000, 1),      
-(N'Nuoc trai cay Nutriboost 297ml', 'Drink', 28000, 1),  
-(N'Fanta 32oz', 'Drink', 37000, 1),
-(N'Coke Zero 32oz', 'Drink', 37000, 1),
-(N'Coke 32oz', 'Drink', 37000, 1),
-(N'Sprite 32oz', 'Drink', 37000, 1),
-
-(N'Snack Thai', 'Snack', 25000, 1),           
-(N'Khoai Tay Lay''s Stax 100g', 'Poca', 59000, 1),  
-(N'Poca Khoai Tay 54gr', 'Poca', 28000, 1),  
-(N'Poca Wavy 54gr', 'Poca', 28000, 1);
+INSERT INTO FoodAndBeverages (FoodID, ProductName, Category, Price, CinemaID) VALUES
+('F00001', N'Combo Party', 'Combo', 210000, 1),
+('F00002', N'Combo Solo', 'Combo', 94000, 1),
+('F00003', N'Combo Couple', 'Combo', 115000, 1),
+('F00004', N'Combo Nha Gau', 'Combo2', 259000, 1),
+('F00005', N'Combo Gau', 'Combo2', 119000, 1),
+('F00006', N'Combo Co Gau', 'Combo2', 129000, 1),
+('F00007', N'Nuoc cam Teppy 327ml', 'Drink', 28000, 1),
+('F00008', N'Nuoc suoi Dasani', 'Drink', 20000, 1),
+('F00009', N'Nuoc trai cay Nutriboost 297ml', 'Drink', 28000, 1),
+('F00010', N'Fanta 32oz', 'Drink', 37000, 1),
+('F00011', N'Coke Zero 32oz', 'Drink', 37000, 1),
+('F00012', N'Coke 32oz', 'Drink', 37000, 1),
+('F00013', N'Sprite 32oz', 'Drink', 37000, 1),
+('F00014', N'Snack Thai', 'Snack', 25000, 1),
+('F00015', N'Khoai Tay Lay''s Stax 100g', 'Poca', 59000, 1),
+('F00016', N'Poca Khoai Tay 54gr', 'Poca', 28000, 1),
+('F00017', N'Poca Wavy 54gr', 'Poca', 28000, 1);
 GO
+
 
 
 -- Cinema
