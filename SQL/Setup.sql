@@ -188,17 +188,9 @@ CREATE TABLE DetailBooking (
 
 );
 
-SELECT * FROM SYS.triggers;
-DELETE FROM SYS.triggers;
-
-
-
-
-
-
 -- Trigger for insertion on Customers table
 -- Phone format: 10 digits
--- CustomerID format: CUSTXXXXX
+-- CustomerID format: CXXXXX
 -- MembershipType: Regular/CFRIEND/CVIP
 CREATE TRIGGER CheckCustomerInsertion ON Customers
 AFTER INSERT, UPDATE
@@ -256,7 +248,7 @@ END;
 GO
 
 -- Trigger for insertion on Seats table
--- Type: 0/1
+-- Type: D/S
 drop trigger if exists CheckSeatInsertion
 CREATE TRIGGER CheckSeatInsertion ON Seats
 AFTER INSERT, UPDATE
@@ -475,42 +467,6 @@ END;
 GO
 
 
-
--- Tu dong tao foodID
-CREATE TRIGGER GenerateFoodID
-ON FoodAndBeverages
-INSTEAD OF INSERT
-AS
-BEGIN
-	DECLARE @FoodID VARCHAR(30),
-			@GUID VARCHAR(8), -- Lay 8 ky tu dau cua GUID
-			@ProductName VARCHAR(255),
-			@Price DECIMAL(10, 2),
-			@Category VARCHAR(255),
-			@CinemaID INT;
-	
-	DECLARE cur CURSOR FOR
-	SELECT ProductName, CinemaID, Category, Price
-	FROM inserted
-
-	OPEN cur;
-	FETCH NEXT FROM cur INTO @ProductName, @CinemaID, @Category, @Price;
-
-	WHILE @@FETCH_STATUS = 0
-	BEGIN
-		SET @GUID = SUBSTRING(CONVERT(VARCHAR(36), NEWID()), 1, 8);
-		SET @FoodID = CONCAT('FOOD-', @GUID);
-
-		INSERT INTO FoodAndBeverages(FoodID, ProductName, CinemaID, Category, Price)
-		VALUES (@FoodID, @ProductName, @CinemaID, @Category, @Price );
-
-		FETCH NEXT FROM cur INTO @ProductName, @CinemaID, @Category, @Price;
-		
-	END
-	CLOSE cur;
-	DEALLOCATE cur;
-END;
-GO
 
 
 -- Tao RoomID
@@ -774,13 +730,13 @@ BEGIN
 		FROM DetailBooking db
 		WHERE @BookingID = db.BookingID
 	)
-	--Lay ticket quantity va price
+	--Lay ticket quantity va price (neu ma ko co 1 trong 2 cot thi de cai cot null -> 0)
 	SELECT
-		--@TicketQuantity = MAX(CASE WHEN d.ProductType = 'Ticket' THEN d.Quantity ELSE 0 END),
-		@TicketPrice = SUM (CASE WHEN d.ProductType = 'Ticket' THEN d.PricePerUnit END),
-		@TotalFoodPrice = SUM(CASE WHEN d.ProductType = 'Food' THEN d.PricePerUnit * d.Quantity  END),
-		@FoodQuantity = MAX(CASE WHEN d.ProductType = 'Food' THEN d.Quantity ELSE 0 END)
+		@TicketPrice = COALESCE(SUM(CASE WHEN d.ProductType = 'Ticket' THEN d.PricePerUnit END), 0),
+		@TotalFoodPrice = COALESCE(SUM(CASE WHEN d.ProductType = 'Food' THEN d.PricePerUnit * d.Quantity END), 0),
+		@FoodQuantity = COALESCE(MAX(CASE WHEN d.ProductType = 'Food' THEN d.Quantity ELSE 0 END), 0)
 	FROM Details d;
+
 
 
 	-- Dieu chinh gia ve
@@ -829,6 +785,8 @@ BEGIN
         N'Thanh toán đã hoàn tất!' AS Message;  -- Thông báo
 END;
 GO
+
+select * from DetailBooking
 
 -- SELECTION
 select * from FoodAndBeverages
@@ -950,19 +908,6 @@ VALUES
 (3, 1, 135000, 1, 1); 
 GO
 
-INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
-VALUES 
-(1, N'KÈO CUỐI ', 109, 1, 'Kelly Marcel', N'Tom Hardy sẽ tái xuất trong bom tấn Venom: The Last Dance và phải đối mặt với toàn bộ chủng tộc Symbiote', 'Other', '2024-09-25', 'https://youtu.be/6yCMRxGI4RA', 'T13', N'Hành Động'),
-(2, N'NGÀY XƯA CÓ MỘT CHUYỆN TÌNH', 135, 1, N'Trịnh Đình Lê Minh' ,N'Ngày Xưa Có Một Chuyện Tình xoay quanh câu chuyện tình bạn, tình yêu giữa hai chàng trai và một cô gái từ thuở ấu thơ ...', 'VietNam', '2024-01-10', 'https://youtu.be/4Y2q2tx1Ee8', 'T16', N'Tình Cảm'),
-(3, N'CÔ DÂU HÀO MÔN', 114, 1, N'Vũ Ngọc Đãng', N'Bộ phim xoay quanh câu chuyện làm dâu nhà hào môn dưới góc nhìn hài hước và châm biếm, hé lộ những câu chuyện kén dâu chọn rể trong giới thượng lưu...', 'VietNam', '2024-10-18', 'https://youtu.be/OP5X4Bp-g78', 'T18', N'Tâm Lý'),
-(4, N'VÂY HÃM TẠI ĐÀI BẮC', 100, 1, N'George Huang', N'Theo chân John Lawlor là một đặc vụ DEA cừ khôi bất khả chiến bại, anh sẽ không tiếc hi sinh bất cứ điều gì để hoàn thành nhiệm vụ được giao.Trong khi đó, Joey Kwang là "người vận chuyển" hàng đầu ở Đài Bắc..', 'Other', '2024-01-11', NULL, 'T18', N'Hồi Hộp'),
-(5, N'ELLI VÀ BÍ ẨN CHIẾC TÀU MA', 86, 1, N'Piet De Rycker', N'Một hồn ma nhỏ vô gia cư gõ cửa nhà những cư dân lập dị của Chuyến tàu ma để tìm kiếm một nơi thuộc về, cô bé vô tình thu hút sự chú ý từ "thế giới bên ngoài", ...', 'Other', '2024-10-25', 'https://youtu.be/j_rApVdDV-E', 'P', N'Hoạt hình'),
-(6, N'TIẾNG GỌI CỦA OÁN HỒN', 108, 1, N'Takashi Shimizu', N'Năm 1992, một cô gái rơi từ mái của trường trung học cơ sở. Bên cạnh thi thể của cô ấy là một máy ghi âm cassette vẫn đang ghi lại...', 'Other', '2024-01-11', 'https://youtu.be/fBubjidz0vw', 'T18', N'Kinh Dị'),
-(7, N'VÙNG ĐẤT BỊ NGUYỀN RỦA', 117, 1, N'Panu Aree', N'Sau cái chết của vợ, để trốn tránh quá khứ, Mit và cô con gái May chuyển đến một ngôi nhà mới ở khu phố ngoại ô. Trong lúc chuẩn bị xây dựng một miếu thờ thiên trước nhà mới,...', 'Other', '2024-01-11', 'https://youtu.be/4X-hI7qCJ98', 'T18', N'Kinh Dị'),
-(8, N'QUỶ ĂN TẠNG 2', 120, 1, N'Taweewat Wantha', 'Khi họ đuổi theo linh hồn mặc áo choàng đen, tiếng kêu đầy ám ảnh của Tee Yod sắp quay trở lại một lần nữa...', 'Other', '2024-10-18', 'https://youtu.be/3ghi6ffcfAI', 'T18', N'Kinh Dị');
-GO
-
-
 INSERT INTO ShowTimes (ShowTimeID, MovieID, StartTime)
 VALUES 
 (1, 1, '08:00:00'),
@@ -1015,6 +960,18 @@ VALUES
 (48, 8, '23:00:00');
 GO
 
+INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
+VALUES 
+(1, N'KÈO CUỐI ', 109, 1, 'Kelly Marcel', N'Tom Hardy sẽ tái xuất trong bom tấn Venom: The Last Dance và phải đối mặt với toàn bộ chủng tộc Symbiote', 'Other', '2024-09-25', 'https://youtu.be/6yCMRxGI4RA', 'T13', N'Hành Động'),
+(2, N'NGÀY XƯA CÓ MỘT CHUYỆN TÌNH', 135, 1, N'Trịnh Đình Lê Minh' ,N'Ngày Xưa Có Một Chuyện Tình xoay quanh câu chuyện tình bạn, tình yêu giữa hai chàng trai và một cô gái từ thuở ấu thơ ...', 'VietNam', '2024-01-10', 'https://youtu.be/4Y2q2tx1Ee8', 'T16', N'Tình Cảm'),
+(3, N'CÔ DÂU HÀO MÔN', 114, 1, N'Vũ Ngọc Đãng', N'Bộ phim xoay quanh câu chuyện làm dâu nhà hào môn dưới góc nhìn hài hước và châm biếm, hé lộ những câu chuyện kén dâu chọn rể trong giới thượng lưu...', 'VietNam', '2024-10-18', 'https://youtu.be/OP5X4Bp-g78', 'T18', N'Tâm Lý'),
+(4, N'VÂY HÃM TẠI ĐÀI BẮC', 100, 1, N'George Huang', N'Theo chân John Lawlor là một đặc vụ DEA cừ khôi bất khả chiến bại, anh sẽ không tiếc hi sinh bất cứ điều gì để hoàn thành nhiệm vụ được giao.Trong khi đó, Joey Kwang là "người vận chuyển" hàng đầu ở Đài Bắc..', 'Other', '2024-01-11', NULL, 'T18', N'Hồi Hộp'),
+(5, N'ELLI VÀ BÍ ẨN CHIẾC TÀU MA', 86, 1, N'Piet De Rycker', N'Một hồn ma nhỏ vô gia cư gõ cửa nhà những cư dân lập dị của Chuyến tàu ma để tìm kiếm một nơi thuộc về, cô bé vô tình thu hút sự chú ý từ "thế giới bên ngoài", ...', 'Other', '2024-10-25', 'https://youtu.be/j_rApVdDV-E', 'P', N'Hoạt hình'),
+(6, N'TIẾNG GỌI CỦA OÁN HỒN', 108, 1, N'Takashi Shimizu', N'Năm 1992, một cô gái rơi từ mái của trường trung học cơ sở. Bên cạnh thi thể của cô ấy là một máy ghi âm cassette vẫn đang ghi lại...', 'Other', '2024-01-11', 'https://youtu.be/fBubjidz0vw', 'T18', N'Kinh Dị'),
+(7, N'VÙNG ĐẤT BỊ NGUYỀN RỦA', 117, 1, N'Panu Aree', N'Sau cái chết của vợ, để trốn tránh quá khứ, Mit và cô con gái May chuyển đến một ngôi nhà mới ở khu phố ngoại ô. Trong lúc chuẩn bị xây dựng một miếu thờ thiên trước nhà mới,...', 'Other', '2024-01-11', 'https://youtu.be/4X-hI7qCJ98', 'T18', N'Kinh Dị'),
+(8, N'QUỶ ĂN TẠNG 2', 120, 1, N'Taweewat Wantha', 'Khi họ đuổi theo linh hồn mặc áo choàng đen, tiếng kêu đầy ám ảnh của Tee Yod sắp quay trở lại một lần nữa...', 'Other', '2024-10-18', 'https://youtu.be/3ghi6ffcfAI', 'T18', N'Kinh Dị');
+GO
+
 INSERT INTO Ticket(PriceID, SeatID, MovieID, ShowTimeID)
 VALUES
 (1, 'C1R1A1', 1, 1), 
@@ -1049,16 +1006,6 @@ VALUES
 (6, 'Mobile Payment', 'Payments made via mobile wallets such as Apple Pay or Google Wallet');
 GO
 
--- Customer
-INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
-VALUES 
-('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
-('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
-('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
-('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
-('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'); 
-GO
-
 -- Booking
 INSERT INTO Booking(BookingID, CustomerID, TransactionDate)
 VALUES
@@ -1077,7 +1024,20 @@ VALUES
 ('B00009', 'C00003', NULL, '2024-10-26 23:20:21.243');
 GO
 
+-- Customer
+INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
+VALUES 
+('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
+('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
+('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
+('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
+('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'); 
+GO
+
 -- DetailBooking
+select * from DetailBooking
+select * from Ticket
+delete from DetailBooking
 INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
 VALUES 
 (1, 'B00001', 'TC1M1S1-C1R1A1', 'Ticket'),
@@ -1156,6 +1116,9 @@ EXEC CalculateFinalAmount @BookingID = 'B00001'
 EXEC CalculateFinalAmount @BookingID = 'B00002'
 EXEC CalculateFinalAmount @BookingID = 'B00003'
 EXEC CalculateFinalAmount @BookingID = 'B00004'
+EXEC CalculateFinalAmount @BookingID = 'B00005'
+EXEC CalculateFinalAmount @BookingID = 'B00006'
+EXEC CalculateFinalAmount @BookingID = 'B00007'
 GO
 
 delete from Transactions
