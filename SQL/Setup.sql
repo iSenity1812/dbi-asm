@@ -402,7 +402,7 @@ GO
 
 -- Tu dong  tao ticketID
 /*
-	TicketID: TC{CinemaID}M{MovieID}S{ShowTimeID}-{GUID}(8 ky tu dau)
+	TicketID: TC{CinemaID}M{MovieID}S{ShowTimeID}-{SeatID}
 	Lay cac thong tin can thiet, Check xem seat co dc dat hay ko thi moi tao TicketID
 */
 
