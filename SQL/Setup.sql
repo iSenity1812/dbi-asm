@@ -28,9 +28,6 @@ CREATE TABLE Movies (
 	Genre NVARCHAR(50),
 );
 
-alter table Movies
-alter column Genre nvarchar(50);
-
 
 -- Create table Cinemas
 CREATE TABLE Cinemas (
