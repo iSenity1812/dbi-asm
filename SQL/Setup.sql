@@ -11,7 +11,7 @@ CREATE TABLE Customers (
 	City NVARCHAR(50),
 	[Address] NVARCHAR(50),
 	MembershipType VARCHAR(50) --Regular/CFRIEND/CVIP
-);
+); 
 
 -- Create table Movies
 CREATE TABLE Movies (
@@ -188,10 +188,6 @@ CREATE TABLE DetailBooking (
 
 );
 
-SELECT * FROM SYS.triggers;
-DELETE FROM SYS.triggers;
-
-
 
 
 
@@ -257,7 +253,7 @@ GO
 
 -- Trigger for insertion on Seats table
 -- Type: D/S
-drop trigger if exists CheckSeatInsertion
+
 CREATE TRIGGER CheckSeatInsertion ON Seats
 AFTER INSERT, UPDATE
 AS BEGIN
@@ -799,40 +795,6 @@ BEGIN
 END;
 GO
 
--- SELECTION
-select * from FoodAndBeverages
-select * from Cinemas
-select * from Rooms
-select * from Seats
-select * from TicketPrice
-select * from Ticket
-select * from Movies
-select * from ShowTimes
-select * from Booking
-select * from Transactions
-select * from Customers
-select * from Discounts
-select * from PaymentMethods
-select * from DetailBooking
-GO
-
--- DELETION
-delete from FoodAndBeverages
-delete from Cinemas
-delete from Rooms
-delete from Seats
-delete from TicketPrice
-delete from Ticket
-delete from Movies
-delete from ShowTimes
-delete from Booking
-delete from Transactions
-delete from Customers
-delete from Discounts
-delete from PaymentMethods
-delete from DetailBooking
-GO
-
 
 
 -- Cinema
@@ -971,6 +933,41 @@ VALUES
 (48, 8, '23:00:00');
 GO
 
+-- Customer
+INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
+VALUES 
+('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
+('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
+('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
+('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
+('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'),
+('C00006', 'hieu.nguyen', N'Hiếu', N'Nguyễn', 'M', '0933445566', 'hieunguyen@gmail.com', N'Hà Nội', N'123 Láng Hạ', 'Regular'),
+('C00007', 'hoa.le', N'Hoa', N'Lê', 'F', '0911223344', 'hoa.le92@gmail.com', N'Hải Phòng', N'56 Nguyễn Công Trứ', 'CFRIEND'),
+('C00008', 'minh.tran', N'Minh', N'Trần', 'M', '0966554433', 'minhtran88@gmail.com', N'Đà Nẵng', N'78 Trần Phú', 'CVIP'),
+('C00009', 'lan.pham', N'Lan', N'Phạm', 'F', '0977889900', 'lanpham1975@gmail.com', N'Hồ Chí Minh', N'47B Bùi Viện', 'Regular'),
+('C00010', 'duong.bui', N'Dương', N'Bùi', 'M', '0900123456', 'duongbui.vn@gmail.com', N'Cần Thơ', N'15 Lý Tự Trọng', 'CFRIEND'),
+('C00011', 'linh.dao', N'Linh', N'Đào', 'F', '0945123789', 'linhdao@gmail.com', N'Hà Nội', N'90 Hàng Bạc', 'CVIP'),
+('C00012', 'son.pham', N'Sơn', N'Phạm', 'M', '0938761234', 'sonpham@gmail.com', N'Vũng Tàu', N'22 Hùng Vương', 'Regular'),
+('C00013', 'hoang.phan', N'Hoàng', N'Phan', 'M', '0971123344', 'hoangphan01@gmail.com', N'Quảng Ninh', N'11 Lý Thường Kiệt', 'CFRIEND'),
+('C00014', 'my.nguyen', N'Mỹ', N'Nguyễn', 'F', '0912345678', 'my.nguyen@gmail.com', N'Tây Ninh', N'102 Phạm Hùng', 'Regular'),
+('C00015', 'thuy.le', N'Thủy', N'Lê', 'F', '0922334455', 'thuy.le@gmail.com', N'Đà Lạt', N'67 Nguyễn Chí Thanh', 'CFRIEND'),
+('C00016', 'truong.vo', N'Truờng', N'Võ', 'M', '0905456789', 'truongvo@gmail.com', N'Kiên Giang', N'15 Nguyễn Trung Trực', 'CVIP'),
+('C00017', 'mai.nguyen', N'Mai', N'Nguyễn', 'F', '0989992233', 'mainguyen@gmail.com', N'Bình Định', N'45 Phan Đình Phùng', 'Regular'),
+('C00018', 'tam.dang', N'Tâm', N'Đặng', 'M', '0932771234', 'tam.dang@gmail.com', N'Bắc Giang', N'79 Lê Lợi', 'CFRIEND'),
+('C00019', 'anh.tran', N'Anh', N'Trần', 'F', '0973445566', 'anhtran@gmail.com', N'Khánh Hòa', N'32 Trần Hưng Đạo', 'Regular'),
+('C00020', 'long.nguyen', N'Long', N'Nguyễn', 'M', '0956782345', 'longnguyen@gmail.com', N'Bến Tre', N'123 Đoàn Thị Điểm', 'CVIP'),
+('C00021', 'bao.vu', N'Bảo', N'Vũ', 'M', '0921345678', 'baovu@gmail.com', N'Quảng Nam', N'85 Trần Phú', 'Regular'),
+('C00022', 'lanh.vo', N'Lãnh', N'Võ', 'M', '0945678123', 'lanh.vo@gmail.com', N'Nha Trang', N'53A Lê Đại Hành', 'CFRIEND'),
+('C00023', 'yen.pham', N'Yến', N'Phạm', 'F', '0902233445', 'yen.pham92@gmail.com', N'Hồ Chí Minh', N'17 Cao Thắng', 'CVIP'),
+('C00024', 'hien.nguyen', N'Hiền', N'Nguyễn', 'F', '0911445566', 'hiennguyen@gmail.com', N'Hà Nội', N'102 Nguyễn Trãi', 'Regular'),
+('C00025', 'khanh.le', N'Khánh', N'Lê', 'M', '0923456781', 'khanhle@gmail.com', N'Hải Phòng', N'43 Trần Nhật Duật', 'CFRIEND'),
+('C00026', 'phuc.tran', N'Phúc', N'Trần', 'M', '0987654123', 'phuctran@gmail.com', N'Bình Thuận', N'65 Nguyễn Đình Chiểu', 'Regular'),
+('C00027', 'nga.dang', N'Nga', N'Đặng', 'F', '0918765432', 'nga.dang84@gmail.com', N'Cần Thơ', N'19 Phan Đăng Lưu', 'CVIP'),
+('C00028', 'truc.pham', N'Trúc', N'Phạm', 'F', '0909988776', 'trucpham@gmail.com', N'Vĩnh Long', N'88B Nguyễn Văn Cừ', 'Regular'),
+('C00029', 'binh.le', N'Bình', N'Lê', 'M', '0933445567', 'binh.le68@gmail.com', N'Long An', N'47 Lê Văn Thịnh', 'CFRIEND'),
+('C00030', 'ly.truong', N'Lý', N'Trương', 'F', '0945566778', 'lytruong@gmail.com', N'Quảng Ngãi', N'23 Hùng Vương', 'CVIP');
+GO
+
 INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
 VALUES 
 (1, N'KÈO CUỐI ', 109, 1, 'Kelly Marcel', N'Tom Hardy sẽ tái xuất trong bom tấn Venom: The Last Dance và phải đối mặt với toàn bộ chủng tộc Symbiote', 'Other', '2024-09-25', 'https://youtu.be/6yCMRxGI4RA', 'T13', N'Hành Động'),
@@ -1035,15 +1032,7 @@ VALUES
 ('B00009', 'C00003', NULL, '2024-10-26 23:20:21.243');
 GO
 
--- Customer
-INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
-VALUES 
-('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
-('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
-('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
-('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
-('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'); 
-GO
+
 
 -- DetailBooking
 select * from DetailBooking
@@ -1087,8 +1076,7 @@ VALUES
 ('TRANS00009', 'B00009', 3);
 GO
 
-
-
+/*
 select * from FoodAndBeverages
 select * from Cinemas
 select * from Rooms
@@ -1121,7 +1109,7 @@ delete from Discounts
 delete from PaymentMethods
 delete from DetailBooking
 GO
-
+*/
 
 EXEC CalculateFinalAmount @BookingID = 'B00001'
 EXEC CalculateFinalAmount @BookingID = 'B00002'
@@ -1131,7 +1119,3 @@ EXEC CalculateFinalAmount @BookingID = 'B00005'
 EXEC CalculateFinalAmount @BookingID = 'B00006'
 EXEC CalculateFinalAmount @BookingID = 'B00007'
 GO
-
-delete from Transactions
-
-select * from sys.triggers
