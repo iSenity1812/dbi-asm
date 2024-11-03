@@ -188,7 +188,10 @@ CREATE TABLE DetailBooking (
 
 );
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> eb5ca92639102ffa6416fccc4948d370689c4639
 
 
 
@@ -403,7 +406,7 @@ GO
 
 -- Tu dong  tao ticketID
 /*
-	TicketID: TC{CinemaID}M{MovieID}S{ShowTimeID}-{GUID}(8 ky tu dau)
+	TicketID: TC{CinemaID}M{MovieID}S{ShowTimeID}-{SeatID}
 	Lay cac thong tin can thiet, Check xem seat co dc dat hay ko thi moi tao TicketID
 */
 
@@ -796,7 +799,6 @@ END;
 GO
 
 
-
 -- Cinema
 INSERT INTO Cinemas (CinemaID, Name, Location, TotalScreens) VALUES
 (1, 'Cinestar DL', N'Đà Lạt', 5),
@@ -1116,3 +1118,8 @@ EXEC CalculateFinalAmount @BookingID = 'B00005'
 EXEC CalculateFinalAmount @BookingID = 'B00006'
 EXEC CalculateFinalAmount @BookingID = 'B00007'
 GO
+<<<<<<< HEAD
+=======
+
+select * from sys.triggers
+>>>>>>> eb5ca92639102ffa6416fccc4948d370689c4639
