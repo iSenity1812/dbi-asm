@@ -187,7 +187,7 @@ CREATE TABLE DetailBooking (
     --CONSTRAINT UQ_Booking_Food UNIQUE (BookingID, FoodID), -- Unique composite key -- Trong truong hop co nhieu phan loai hang
 
 );
-
+GO
 
 
 
@@ -252,7 +252,7 @@ GO
 
 -- Trigger for insertion on Seats table
 -- Type: D/S
-
+drop trigger if exists CheckSeatInsertion
 CREATE TRIGGER CheckSeatInsertion ON Seats
 AFTER INSERT, UPDATE
 AS BEGIN
@@ -402,7 +402,7 @@ GO
 
 -- Tu dong  tao ticketID
 /*
-	TicketID: TC{CinemaID}M{MovieID}S{ShowTimeID}-{SeatID}
+	TicketID: TC{CinemaID}M{MovieID}S{ShowTimeID}-{GUID}(8 ky tu dau)
 	Lay cac thong tin can thiet, Check xem seat co dc dat hay ko thi moi tao TicketID
 */
 
@@ -795,10 +795,47 @@ END;
 GO
 
 
+
+
 -- Cinema
 INSERT INTO Cinemas (CinemaID, Name, Location, TotalScreens) VALUES
 (1, 'Cinestar DL', N'Đà Lạt', 5),
 (2, 'Cinestar BD', N'Bình Dương', 4);
+GO
+
+-- Customers
+INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
+VALUES 
+('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
+('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
+('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
+('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
+('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'),
+('C00006', 'hieu.nguyen', N'Hiếu', N'Nguyễn', 'M', '0933445566', 'hieunguyen@gmail.com', N'Hà Nội', N'123 Láng Hạ', 'Regular'),
+('C00007', 'hoa.le', N'Hoa', N'Lê', 'F', '0911223344', 'hoa.le92@gmail.com', N'Hải Phòng', N'56 Nguyễn Công Trứ', 'CFRIEND'),
+('C00008', 'minh.tran', N'Minh', N'Trần', 'M', '0966554433', 'minhtran88@gmail.com', N'Đà Nẵng', N'78 Trần Phú', 'CVIP'),
+('C00009', 'lan.pham', N'Lan', N'Phạm', 'F', '0977889900', 'lanpham1975@gmail.com', N'Hồ Chí Minh', N'47B Bùi Viện', 'Regular'),
+('C00010', 'duong.bui', N'Dương', N'Bùi', 'M', '0900123456', 'duongbui.vn@gmail.com', N'Cần Thơ', N'15 Lý Tự Trọng', 'CFRIEND'),
+('C00011', 'linh.dao', N'Linh', N'Đào', 'F', '0945123789', 'linhdao@gmail.com', N'Hà Nội', N'90 Hàng Bạc', 'CVIP'),
+('C00012', 'son.pham', N'Sơn', N'Phạm', 'M', '0938761234', 'sonpham@gmail.com', N'Vũng Tàu', N'22 Hùng Vương', 'Regular'),
+('C00013', 'hoang.phan', N'Hoàng', N'Phan', 'M', '0971123344', 'hoangphan01@gmail.com', N'Quảng Ninh', N'11 Lý Thường Kiệt', 'CFRIEND'),
+('C00014', 'my.nguyen', N'Mỹ', N'Nguyễn', 'F', '0912345678', 'my.nguyen@gmail.com', N'Tây Ninh', N'102 Phạm Hùng', 'Regular'),
+('C00015', 'thuy.le', N'Thủy', N'Lê', 'F', '0922334455', 'thuy.le@gmail.com', N'Đà Lạt', N'67 Nguyễn Chí Thanh', 'CFRIEND'),
+('C00016', 'truong.vo', N'Truờng', N'Võ', 'M', '0905456789', 'truongvo@gmail.com', N'Kiên Giang', N'15 Nguyễn Trung Trực', 'CVIP'),
+('C00017', 'mai.nguyen', N'Mai', N'Nguyễn', 'F', '0989992233', 'mainguyen@gmail.com', N'Bình Định', N'45 Phan Đình Phùng', 'Regular'),
+('C00018', 'tam.dang', N'Tâm', N'Đặng', 'M', '0932771234', 'tam.dang@gmail.com', N'Bắc Giang', N'79 Lê Lợi', 'CFRIEND'),
+('C00019', 'anh.tran', N'Anh', N'Trần', 'F', '0973445566', 'anhtran@gmail.com', N'Khánh Hòa', N'32 Trần Hưng Đạo', 'Regular'),
+('C00020', 'long.nguyen', N'Long', N'Nguyễn', 'M', '0956782345', 'longnguyen@gmail.com', N'Bến Tre', N'123 Đoàn Thị Điểm', 'CVIP'),
+('C00021', 'bao.vu', N'Bảo', N'Vũ', 'M', '0921345678', 'baovu@gmail.com', N'Quảng Nam', N'85 Trần Phú', 'Regular'),
+('C00022', 'lanh.vo', N'Lãnh', N'Võ', 'M', '0945678123', 'lanh.vo@gmail.com', N'Nha Trang', N'53A Lê Đại Hành', 'CFRIEND'),
+('C00023', 'yen.pham', N'Yến', N'Phạm', 'F', '0902233445', 'yen.pham92@gmail.com', N'Hồ Chí Minh', N'17 Cao Thắng', 'CVIP'),
+('C00024', 'hien.nguyen', N'Hiền', N'Nguyễn', 'F', '0911445566', 'hiennguyen@gmail.com', N'Hà Nội', N'102 Nguyễn Trãi', 'Regular'),
+('C00025', 'khanh.le', N'Khánh', N'Lê', 'M', '0923456781', 'khanhle@gmail.com', N'Hải Phòng', N'43 Trần Nhật Duật', 'CFRIEND'),
+('C00026', 'phuc.tran', N'Phúc', N'Trần', 'M', '0987654123', 'phuctran@gmail.com', N'Bình Thuận', N'65 Nguyễn Đình Chiểu', 'Regular'),
+('C00027', 'nga.dang', N'Nga', N'Đặng', 'F', '0918765432', 'nga.dang84@gmail.com', N'Cần Thơ', N'19 Phan Đăng Lưu', 'CVIP'),
+('C00028', 'truc.pham', N'Trúc', N'Phạm', 'F', '0909988776', 'trucpham@gmail.com', N'Vĩnh Long', N'88B Nguyễn Văn Cừ', 'Regular'),
+('C00029', 'binh.le', N'Bình', N'Lê', 'M', '0933445567', 'binh.le68@gmail.com', N'Long An', N'47 Lê Văn Thịnh', 'CFRIEND'),
+('C00030', 'ly.truong', N'Lý', N'Trương', 'F', '0945566778', 'lytruong@gmail.com', N'Quảng Ngãi', N'23 Hùng Vương', 'CVIP');
 GO
 
 -- Food
@@ -822,7 +859,17 @@ INSERT INTO FoodAndBeverages (FoodID, ProductName, Category, Price, CinemaID) VA
 ('F00017', N'Poca Wavy 54gr', 'Poca', 28000, 1);
 GO
 
-
+INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
+VALUES 
+(1, N'KÈO CUỐI ', 109, 1, 'Kelly Marcel', N'Tom Hardy sẽ tái xuất trong bom tấn Venom: The Last Dance và phải đối mặt với toàn bộ chủng tộc Symbiote', 'Other', '2024-09-25', 'https://youtu.be/6yCMRxGI4RA', 'T13', N'Hành Động'),
+(2, N'NGÀY XƯA CÓ MỘT CHUYỆN TÌNH', 135, 1, N'Trịnh Đình Lê Minh' ,N'Ngày Xưa Có Một Chuyện Tình xoay quanh câu chuyện tình bạn, tình yêu giữa hai chàng trai và một cô gái từ thuở ấu thơ ...', 'VietNam', '2024-01-10', 'https://youtu.be/4Y2q2tx1Ee8', 'T16', N'Tình Cảm'),
+(3, N'CÔ DÂU HÀO MÔN', 114, 1, N'Vũ Ngọc Đãng', N'Bộ phim xoay quanh câu chuyện làm dâu nhà hào môn dưới góc nhìn hài hước và châm biếm, hé lộ những câu chuyện kén dâu chọn rể trong giới thượng lưu...', 'VietNam', '2024-10-18', 'https://youtu.be/OP5X4Bp-g78', 'T18', N'Tâm Lý'),
+(4, N'VÂY HÃM TẠI ĐÀI BẮC', 100, 1, N'George Huang', N'Theo chân John Lawlor là một đặc vụ DEA cừ khôi bất khả chiến bại, anh sẽ không tiếc hi sinh bất cứ điều gì để hoàn thành nhiệm vụ được giao.Trong khi đó, Joey Kwang là "người vận chuyển" hàng đầu ở Đài Bắc..', 'Other', '2024-01-11', NULL, 'T18', N'Hồi Hộp'),
+(5, N'ELLI VÀ BÍ ẨN CHIẾC TÀU MA', 86, 1, N'Piet De Rycker', N'Một hồn ma nhỏ vô gia cư gõ cửa nhà những cư dân lập dị của Chuyến tàu ma để tìm kiếm một nơi thuộc về, cô bé vô tình thu hút sự chú ý từ "thế giới bên ngoài", ...', 'Other', '2024-10-25', 'https://youtu.be/j_rApVdDV-E', 'P', N'Hoạt hình'),
+(6, N'TIẾNG GỌI CỦA OÁN HỒN', 108, 1, N'Takashi Shimizu', N'Năm 1992, một cô gái rơi từ mái của trường trung học cơ sở. Bên cạnh thi thể của cô ấy là một máy ghi âm cassette vẫn đang ghi lại...', 'Other', '2024-01-11', 'https://youtu.be/fBubjidz0vw', 'T18', N'Kinh Dị'),
+(7, N'VÙNG ĐẤT BỊ NGUYỀN RỦA', 117, 1, N'Panu Aree', N'Sau cái chết của vợ, để trốn tránh quá khứ, Mit và cô con gái May chuyển đến một ngôi nhà mới ở khu phố ngoại ô. Trong lúc chuẩn bị xây dựng một miếu thờ thiên trước nhà mới,...', 'Other', '2024-01-11', 'https://youtu.be/4X-hI7qCJ98', 'T18', N'Kinh Dị'),
+(8, N'QUỶ ĂN TẠNG 2', 120, 1, N'Taweewat Wantha', 'Khi họ đuổi theo linh hồn mặc áo choàng đen, tiếng kêu đầy ám ảnh của Tee Yod sắp quay trở lại một lần nữa...', 'Other', '2024-10-18', 'https://youtu.be/3ghi6ffcfAI', 'T18', N'Kinh Dị');
+GO
 
 -- Thêm phòng cho Cinema 
 -- Rooms
@@ -931,52 +978,6 @@ VALUES
 (48, 8, '23:00:00');
 GO
 
--- Customer
-INSERT INTO Customers (CustomerID, Username, FirstName, LastName, Gender, Phone, Email, City, Address, MembershipType)
-VALUES 
-('C00001', 'thang_pham12', N'Thắng', N'Phạm', 'M', '0956344676', 'thangtruongvo@gmail.com', N'Lâm Đồng', N'45 Võ Thị Sáu', 'Regular'),
-('C00002', 'nghi_mint', N'Nghi', N'Võ', 'F', '0987654321', 'bichnghi1302@gmail.com', N'Cần Thơ', N'403/12 Phạm Văn Đồng', 'CFRIEND'),
-('C00003', 'alice_truong', N'Vy', N'Trương', 'F', '0919199453', 'mendytruongcvl@gmail.com', N'Sóc Trăng', N'03/4/6 Ngô Hữu Hạnh', 'CVIP'),
-('C00004', 'phamtan', N'Tân', N'Phạm', 'M', '0656664592', 'pnnhuttan2005@gmail.com', N'Bình Dương', N'321 Ngô Quyền', 'Regular'),
-('C00005', 'jennykim', N'Kim', N'Thiên', 'F', '0456789012', 'thienkimpham32@gmail.com', N'Bạc Liêu', N'65/4 Hai Bà Trưng', 'CFRIEND'),
-('C00006', 'hieu.nguyen', N'Hiếu', N'Nguyễn', 'M', '0933445566', 'hieunguyen@gmail.com', N'Hà Nội', N'123 Láng Hạ', 'Regular'),
-('C00007', 'hoa.le', N'Hoa', N'Lê', 'F', '0911223344', 'hoa.le92@gmail.com', N'Hải Phòng', N'56 Nguyễn Công Trứ', 'CFRIEND'),
-('C00008', 'minh.tran', N'Minh', N'Trần', 'M', '0966554433', 'minhtran88@gmail.com', N'Đà Nẵng', N'78 Trần Phú', 'CVIP'),
-('C00009', 'lan.pham', N'Lan', N'Phạm', 'F', '0977889900', 'lanpham1975@gmail.com', N'Hồ Chí Minh', N'47B Bùi Viện', 'Regular'),
-('C00010', 'duong.bui', N'Dương', N'Bùi', 'M', '0900123456', 'duongbui.vn@gmail.com', N'Cần Thơ', N'15 Lý Tự Trọng', 'CFRIEND'),
-('C00011', 'linh.dao', N'Linh', N'Đào', 'F', '0945123789', 'linhdao@gmail.com', N'Hà Nội', N'90 Hàng Bạc', 'CVIP'),
-('C00012', 'son.pham', N'Sơn', N'Phạm', 'M', '0938761234', 'sonpham@gmail.com', N'Vũng Tàu', N'22 Hùng Vương', 'Regular'),
-('C00013', 'hoang.phan', N'Hoàng', N'Phan', 'M', '0971123344', 'hoangphan01@gmail.com', N'Quảng Ninh', N'11 Lý Thường Kiệt', 'CFRIEND'),
-('C00014', 'my.nguyen', N'Mỹ', N'Nguyễn', 'F', '0912345678', 'my.nguyen@gmail.com', N'Tây Ninh', N'102 Phạm Hùng', 'Regular'),
-('C00015', 'thuy.le', N'Thủy', N'Lê', 'F', '0922334455', 'thuy.le@gmail.com', N'Đà Lạt', N'67 Nguyễn Chí Thanh', 'CFRIEND'),
-('C00016', 'truong.vo', N'Truờng', N'Võ', 'M', '0905456789', 'truongvo@gmail.com', N'Kiên Giang', N'15 Nguyễn Trung Trực', 'CVIP'),
-('C00017', 'mai.nguyen', N'Mai', N'Nguyễn', 'F', '0989992233', 'mainguyen@gmail.com', N'Bình Định', N'45 Phan Đình Phùng', 'Regular'),
-('C00018', 'tam.dang', N'Tâm', N'Đặng', 'M', '0932771234', 'tam.dang@gmail.com', N'Bắc Giang', N'79 Lê Lợi', 'CFRIEND'),
-('C00019', 'anh.tran', N'Anh', N'Trần', 'F', '0973445566', 'anhtran@gmail.com', N'Khánh Hòa', N'32 Trần Hưng Đạo', 'Regular'),
-('C00020', 'long.nguyen', N'Long', N'Nguyễn', 'M', '0956782345', 'longnguyen@gmail.com', N'Bến Tre', N'123 Đoàn Thị Điểm', 'CVIP'),
-('C00021', 'bao.vu', N'Bảo', N'Vũ', 'M', '0921345678', 'baovu@gmail.com', N'Quảng Nam', N'85 Trần Phú', 'Regular'),
-('C00022', 'lanh.vo', N'Lãnh', N'Võ', 'M', '0945678123', 'lanh.vo@gmail.com', N'Nha Trang', N'53A Lê Đại Hành', 'CFRIEND'),
-('C00023', 'yen.pham', N'Yến', N'Phạm', 'F', '0902233445', 'yen.pham92@gmail.com', N'Hồ Chí Minh', N'17 Cao Thắng', 'CVIP'),
-('C00024', 'hien.nguyen', N'Hiền', N'Nguyễn', 'F', '0911445566', 'hiennguyen@gmail.com', N'Hà Nội', N'102 Nguyễn Trãi', 'Regular'),
-('C00025', 'khanh.le', N'Khánh', N'Lê', 'M', '0923456781', 'khanhle@gmail.com', N'Hải Phòng', N'43 Trần Nhật Duật', 'CFRIEND'),
-('C00026', 'phuc.tran', N'Phúc', N'Trần', 'M', '0987654123', 'phuctran@gmail.com', N'Bình Thuận', N'65 Nguyễn Đình Chiểu', 'Regular'),
-('C00027', 'nga.dang', N'Nga', N'Đặng', 'F', '0918765432', 'nga.dang84@gmail.com', N'Cần Thơ', N'19 Phan Đăng Lưu', 'CVIP'),
-('C00028', 'truc.pham', N'Trúc', N'Phạm', 'F', '0909988776', 'trucpham@gmail.com', N'Vĩnh Long', N'88B Nguyễn Văn Cừ', 'Regular'),
-('C00029', 'binh.le', N'Bình', N'Lê', 'M', '0933445567', 'binh.le68@gmail.com', N'Long An', N'47 Lê Văn Thịnh', 'CFRIEND'),
-('C00030', 'ly.truong', N'Lý', N'Trương', 'F', '0945566778', 'lytruong@gmail.com', N'Quảng Ngãi', N'23 Hùng Vương', 'CVIP');
-GO
-
-INSERT INTO Movies (MovieID, Title, Duration, Subtitle, Director, [Description], [Language], ReleaseDate, TrailerURL, AgeRestriction, Genre)
-VALUES 
-(1, N'KÈO CUỐI ', 109, 1, 'Kelly Marcel', N'Tom Hardy sẽ tái xuất trong bom tấn Venom: The Last Dance và phải đối mặt với toàn bộ chủng tộc Symbiote', 'Other', '2024-09-25', 'https://youtu.be/6yCMRxGI4RA', 'T13', N'Hành Động'),
-(2, N'NGÀY XƯA CÓ MỘT CHUYỆN TÌNH', 135, 1, N'Trịnh Đình Lê Minh' ,N'Ngày Xưa Có Một Chuyện Tình xoay quanh câu chuyện tình bạn, tình yêu giữa hai chàng trai và một cô gái từ thuở ấu thơ ...', 'VietNam', '2024-01-10', 'https://youtu.be/4Y2q2tx1Ee8', 'T16', N'Tình Cảm'),
-(3, N'CÔ DÂU HÀO MÔN', 114, 1, N'Vũ Ngọc Đãng', N'Bộ phim xoay quanh câu chuyện làm dâu nhà hào môn dưới góc nhìn hài hước và châm biếm, hé lộ những câu chuyện kén dâu chọn rể trong giới thượng lưu...', 'VietNam', '2024-10-18', 'https://youtu.be/OP5X4Bp-g78', 'T18', N'Tâm Lý'),
-(4, N'VÂY HÃM TẠI ĐÀI BẮC', 100, 1, N'George Huang', N'Theo chân John Lawlor là một đặc vụ DEA cừ khôi bất khả chiến bại, anh sẽ không tiếc hi sinh bất cứ điều gì để hoàn thành nhiệm vụ được giao.Trong khi đó, Joey Kwang là "người vận chuyển" hàng đầu ở Đài Bắc..', 'Other', '2024-01-11', NULL, 'T18', N'Hồi Hộp'),
-(5, N'ELLI VÀ BÍ ẨN CHIẾC TÀU MA', 86, 1, N'Piet De Rycker', N'Một hồn ma nhỏ vô gia cư gõ cửa nhà những cư dân lập dị của Chuyến tàu ma để tìm kiếm một nơi thuộc về, cô bé vô tình thu hút sự chú ý từ "thế giới bên ngoài", ...', 'Other', '2024-10-25', 'https://youtu.be/j_rApVdDV-E', 'P', N'Hoạt hình'),
-(6, N'TIẾNG GỌI CỦA OÁN HỒN', 108, 1, N'Takashi Shimizu', N'Năm 1992, một cô gái rơi từ mái của trường trung học cơ sở. Bên cạnh thi thể của cô ấy là một máy ghi âm cassette vẫn đang ghi lại...', 'Other', '2024-01-11', 'https://youtu.be/fBubjidz0vw', 'T18', N'Kinh Dị'),
-(7, N'VÙNG ĐẤT BỊ NGUYỀN RỦA', 117, 1, N'Panu Aree', N'Sau cái chết của vợ, để trốn tránh quá khứ, Mit và cô con gái May chuyển đến một ngôi nhà mới ở khu phố ngoại ô. Trong lúc chuẩn bị xây dựng một miếu thờ thiên trước nhà mới,...', 'Other', '2024-01-11', 'https://youtu.be/4X-hI7qCJ98', 'T18', N'Kinh Dị'),
-(8, N'QUỶ ĂN TẠNG 2', 120, 1, N'Taweewat Wantha', 'Khi họ đuổi theo linh hồn mặc áo choàng đen, tiếng kêu đầy ám ảnh của Tee Yod sắp quay trở lại một lần nữa...', 'Other', '2024-10-18', 'https://youtu.be/3ghi6ffcfAI', 'T18', N'Kinh Dị');
-GO
 
 INSERT INTO Ticket(PriceID, SeatID, MovieID, ShowTimeID)
 VALUES
@@ -1031,8 +1032,8 @@ VALUES
 GO
 
 
-
 -- DetailBooking
+
 INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
 VALUES 
 (1, 'B00001', 'TC1M1S1-C1R1A1', 'Ticket'),
@@ -1070,6 +1071,7 @@ VALUES
 ('TRANS00008', 'B00008', 6),
 ('TRANS00009', 'B00009', 3);
 GO
+
 
 /*
 select * from FoodAndBeverages
