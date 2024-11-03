@@ -188,10 +188,6 @@ CREATE TABLE DetailBooking (
 
 );
 
-<<<<<<< HEAD
-
-=======
->>>>>>> eb5ca92639102ffa6416fccc4948d370689c4639
 
 
 
@@ -1118,8 +1114,3 @@ EXEC CalculateFinalAmount @BookingID = 'B00005'
 EXEC CalculateFinalAmount @BookingID = 'B00006'
 EXEC CalculateFinalAmount @BookingID = 'B00007'
 GO
-<<<<<<< HEAD
-=======
-
-select * from sys.triggers
->>>>>>> eb5ca92639102ffa6416fccc4948d370689c4639
