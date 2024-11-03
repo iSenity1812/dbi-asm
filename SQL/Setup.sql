@@ -1035,9 +1035,6 @@ GO
 
 
 -- DetailBooking
-select * from DetailBooking
-select * from Ticket
-delete from DetailBooking
 INSERT INTO DetailBooking (DetailBookingID, BookingID, TicketID, ProductType)
 VALUES 
 (1, 'B00001', 'TC1M1S1-C1R1A1', 'Ticket'),
