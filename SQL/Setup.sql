@@ -252,7 +252,6 @@ GO
 
 -- Trigger for insertion on Seats table
 -- Type: D/S
-drop trigger if exists CheckSeatInsertion
 CREATE TRIGGER CheckSeatInsertion ON Seats
 AFTER INSERT, UPDATE
 AS BEGIN
