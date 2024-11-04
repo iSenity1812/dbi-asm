@@ -1028,7 +1028,9 @@ VALUES
 ('B00006', 'C00005', NULL, '2024-10-30 20:20:41.683'),
 ('B00007', 'C00003', NULL, '2024-10-27 20:20:41.683'),
 ('B00008', 'C00002', NULL, '2024-10-27 20:20:42.683'),
-('B00009', 'C00003', NULL, '2024-10-26 23:20:21.243');
+('B00009', 'C00003', NULL, '2024-10-26 23:20:21.243'),
+('B00010', 'C00001', NULL, '2024-11-04 15:00:00'),
+('B00011', 'C00002', NULL, '2024-11-04 15:30:00');
 GO
 
 
@@ -1042,8 +1044,10 @@ VALUES
 (10, 'B00005', 'TC1M1S7-C1R1A3', 'Ticket'),
 (11, 'B00006', 'TC1M1S7-C1R1A4', 'Ticket'),
 (14, 'B00008', 'TC1M3S5-C1R2A4', 'Ticket'),
-(15, 'B00009', 'TC1M6S31-C1R1A7', 'Ticket');
-
+(15, 'B00009', 'TC1M6S31-C1R1A7', 'Ticket'),
+(16, 'B00010', 'TC1M5S25-C1R1A6', 'Ticket'),
+(17, 'B00010', 'TC1M6S31-C1R1A7', 'Ticket'),
+(18, 'B00011', 'TC1M7S37-C1R1A8', 'Ticket');
 GO
 
 INSERT INTO DetailBooking (DetailBookingID, BookingID, FoodID, Quantity, ProductType)
@@ -1055,7 +1059,9 @@ VALUES
 (8, 'B00004', 'F00001', 2, 'Food'),
 (9, 'B00004', 'F00004', 1, 'Food'),
 (12, 'B00006', 'F00006', 1, 'Food'),
-(13, 'B00007', 'F00010', 2, 'Food');
+(13, 'B00007', 'F00010', 2, 'Food'),
+(19, 'B00010', 'F00001', 2, 'Food'),
+(20, 'B00011', 'F00003', 1, 'Food');
 GO
 
 -- Transaction
@@ -1069,7 +1075,9 @@ VALUES
 ('TRANS00006', 'B00006', 3),
 ('TRANS00007', 'B00007', 5),
 ('TRANS00008', 'B00008', 6),
-('TRANS00009', 'B00009', 3);
+('TRANS00009', 'B00009', 3),
+('TRANS00010', 'B00010', 3),
+('TRANS00011', 'B00010', 2);
 GO
 
 
@@ -1108,6 +1116,7 @@ delete from DetailBooking
 GO
 */
 
+
 EXEC CalculateFinalAmount @BookingID = 'B00001'
 EXEC CalculateFinalAmount @BookingID = 'B00002'
 EXEC CalculateFinalAmount @BookingID = 'B00003'
@@ -1115,4 +1124,6 @@ EXEC CalculateFinalAmount @BookingID = 'B00004'
 EXEC CalculateFinalAmount @BookingID = 'B00005'
 EXEC CalculateFinalAmount @BookingID = 'B00006'
 EXEC CalculateFinalAmount @BookingID = 'B00007'
+EXEC CalculateFinalAmount @BookingID = 'B00008'
+EXEC CalculateFinalAmount @BookingID = 'B00009'
 GO
