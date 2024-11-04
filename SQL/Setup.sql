@@ -1116,7 +1116,7 @@ delete from DetailBooking
 GO
 */
 
-
+-- Test CalculateFinalAmount
 EXEC CalculateFinalAmount @BookingID = 'B00001'
 EXEC CalculateFinalAmount @BookingID = 'B00002'
 EXEC CalculateFinalAmount @BookingID = 'B00003'
