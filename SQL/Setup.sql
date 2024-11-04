@@ -167,7 +167,7 @@ CREATE TABLE DetailBooking (
 	-- Foreign key
 	FOREIGN KEY (BookingID) REFERENCES Booking(BookingID),
 	FOREIGN KEY (TicketID) REFERENCES Ticket(TicketID),
-	FOREIGN KEY (FoodID) REFERENCES FoodAndBeverages(FoodID), -- reference to either FoodAndBeverages or Ticket
+	FOREIGN KEY (FoodID) REFERENCES FoodAndBeverages(FoodID),
 
 	-- 1 of them is not null
 	CONSTRAINT CHK_TicketOrFood CHECK (TicketID IS NOT NULL OR FoodID IS NOT NULL),
@@ -179,10 +179,6 @@ CREATE TABLE DetailBooking (
 	),
 
 	CONSTRAINT UQ_Booking_TicketFood UNIQUE (BookingID, TicketID, FoodID)
-
-	--CONSTRAINT UQ_Booking_Ticket UNIQUE (BookingID, TicketID),
-    --CONSTRAINT UQ_Booking_Food UNIQUE (BookingID, FoodID), -- Unique composite key -- Trong truong hop co nhieu phan loai hang
-
 );
 GO
 
@@ -221,18 +217,7 @@ AS BEGIN
 END;
 GO
 
--- Trigger for insertion on FoodAndBeverages table
-CREATE TRIGGER CheckFoodID ON FoodAndBeverages
-AFTER INSERT, UPDATE
-AS BEGIN
-    IF EXISTS (SELECT 1 FROM inserted
-    WHERE FoodID NOT LIKE 'F[0-9][0-9][0-9][0-9][0-9]')
-    BEGIN
-        PRINT('Error! Insertion canceled!');
-        ROLLBACK TRANSACTION;
-    END
-END;
-GO
+
 -- Trigger for insertion on Rooms table
 -- Capacity > 0
 CREATE TRIGGER CheckRoomInsertion ON Rooms
@@ -279,15 +264,23 @@ AS BEGIN
 END;
 GO
 
--- Trigger for insertion on FoodAndBeverages table
--- Price > 0
-CREATE TRIGGER CheckFoodAndBeveragesInsertion ON FoodAndBeverages
+CREATE TRIGGER CheckFoodAndBeverages ON FoodAndBeverages
 AFTER INSERT, UPDATE
 AS BEGIN
+    -- Kiểm tra điều kiện FoodID
+    IF EXISTS (SELECT 1 FROM inserted
+    WHERE FoodID NOT LIKE 'F[0-9][0-9][0-9][0-9][0-9]')
+    BEGIN
+        PRINT('Error! Insertion canceled due to invalid FoodID!');
+        ROLLBACK TRANSACTION;
+        RETURN;  -- Dừng thực hiện nếu có lỗi
+    END
+
+    -- Kiểm tra điều kiện Price
     IF EXISTS (SELECT 1 FROM inserted
     WHERE Price <= 0)
     BEGIN
-        PRINT('Error! Insertion canceled!');
+        PRINT('Error! Insertion canceled due to Price <= 0!');
         ROLLBACK TRANSACTION;
     END
 END;
@@ -388,7 +381,7 @@ BEGIN
 	WHERE RoomID = @RoomID;
 
 	-- Kiem tra seatnumber
-	IF @SeatNum > @Capacity AND @SeatNum <= 0
+	IF @SeatNum > @Capacity OR @SeatNum <= 0
 	BEGIN
 		RAISERROR('SeatNumber cannot be greater than the room capacity.', 16, 1)
 		ROLLBACK TRANSACTION;
@@ -464,8 +457,6 @@ BEGIN
 	DEALLOCATE cur;
 END;
 GO
-
-
 
 
 
@@ -560,7 +551,7 @@ GO
 -- Ktra sea, cap nhat khi ve dc dat
 CREATE TRIGGER UpdateSeatStatus
 ON Ticket
-AFTER INSERT
+AFTER INSERT, UPDATE
 AS
 BEGIN
 	DECLARE @SeatID VARCHAR(20);
@@ -1123,4 +1114,6 @@ EXEC CalculateFinalAmount @BookingID = 'B00006'
 EXEC CalculateFinalAmount @BookingID = 'B00007'
 EXEC CalculateFinalAmount @BookingID = 'B00008'
 EXEC CalculateFinalAmount @BookingID = 'B00009'
+--EXEC CalculateFinalAmount @BookingID = 'B00010'
+--EXEC CalculateFinalAmount @BookingID = 'B00011'
 GO
